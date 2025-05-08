@@ -1,0 +1,881 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shreyan Datta - Nanophotonics & Biosensing Specialist</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            scroll-behavior: smooth;
+        }
+        .gradient-bg {
+            background: linear-gradient(135deg, #4f46e5 0%, #7e22ce 100%);
+        }
+        .card {
+            transition: all 0.3s ease;
+        }
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+        }
+        .timeline-container {
+            border-left: 2px solid #4f46e5;
+            padding-left: 20px;
+            margin-left: 10px;
+        }
+        .timeline-dot {
+            width: 16px;
+            height: 16px;
+            background-color: #4f46e5;
+            border-radius: 50%;
+            position: absolute;
+            left: -8px;
+        }
+        .nav-link {
+            position: relative;
+        }
+        .nav-link::after {
+            content: '';
+            position: absolute;
+            width: 0;
+            height: 2px;
+            bottom: -2px;
+            left: 0;
+            background-color: #4f46e5;
+            transition: width 0.3s ease;
+        }
+        .nav-link:hover::after {
+            width: 100%;
+        }
+        .active::after {
+            width: 100%;
+        }
+        .project-card {
+            transition: transform 0.3s ease;
+        }
+        .project-card:hover {
+            transform: translateY(-5px);
+        }
+        .skill-tag {
+            transition: all 0.3s ease;
+        }
+        .skill-tag:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+        
+        /* Floating skill bubbles */
+        .skill-bubble {
+            position: relative;
+            display: inline-block;
+            padding: 10px 20px;
+            border-radius: 30px;
+            margin: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            animation: float 5s infinite ease-in-out;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+        
+        .skill-bubble:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+        }
+        
+        @keyframes float {
+            0% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+            100% { transform: translateY(0px); }
+        }
+        
+        /* Staggered animation delays for bubbles */
+        .skill-bubble:nth-child(3n+1) {
+            animation-delay: 0s;
+        }
+        .skill-bubble:nth-child(3n+2) {
+            animation-delay: 0.5s;
+        }
+        .skill-bubble:nth-child(3n+3) {
+            animation-delay: 1s;
+        }
+        
+        /* Skill popup */
+        .skill-popup {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) scale(0);
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+            z-index: 100;
+            opacity: 0;
+            transition: all 0.3s ease;
+            max-width: 90%;
+            width: 400px;
+            text-align: center;
+        }
+        
+        .skill-popup.active {
+            transform: translate(-50%, -50%) scale(1);
+            opacity: 1;
+        }
+        
+        .popup-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 99;
+            display: none;
+        }
+        
+        .popup-overlay.active {
+            display: block;
+        }
+        
+        .skill-icon {
+            width: 100px;
+            height: 100px;
+            margin: 0 auto 20px;
+        }
+    </style>
+</head>
+<body class="bg-gray-50">
+    <!-- Navigation -->
+    <nav class="bg-white shadow-md sticky top-0 z-50">
+        <div class="container mx-auto px-4 py-3 flex justify-between items-center">
+            <a href="#" class="text-2xl font-bold text-indigo-600">SD</a>
+            <div class="hidden md:flex space-x-8">
+                <a href="#about" class="nav-link text-gray-700 hover:text-indigo-600 transition">About</a>
+                <a href="#experience" class="nav-link text-gray-700 hover:text-indigo-600 transition">Experience</a>
+                <a href="#education" class="nav-link text-gray-700 hover:text-indigo-600 transition">Education</a>
+                <a href="#publications" class="nav-link text-gray-700 hover:text-indigo-600 transition">Publications</a>
+                <a href="#skills" class="nav-link text-gray-700 hover:text-indigo-600 transition">Skills</a>
+                <a href="#leadership" class="nav-link text-gray-700 hover:text-indigo-600 transition">Leadership</a>
+                <a href="#contact" class="nav-link text-gray-700 hover:text-indigo-600 transition">Contact</a>
+            </div>
+            <button class="md:hidden text-gray-700 focus:outline-none">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+                </svg>
+            </button>
+        </div>
+    </nav>
+
+    <!-- Mobile Menu (Hidden by default) -->
+    <div class="hidden bg-white shadow-md py-2 px-4 md:hidden">
+        <a href="#about" class="block py-2 text-gray-700 hover:text-indigo-600 transition">About</a>
+        <a href="#experience" class="block py-2 text-gray-700 hover:text-indigo-600 transition">Experience</a>
+        <a href="#education" class="block py-2 text-gray-700 hover:text-indigo-600 transition">Education</a>
+        <a href="#publications" class="block py-2 text-gray-700 hover:text-indigo-600 transition">Publications</a>
+        <a href="#skills" class="block py-2 text-gray-700 hover:text-indigo-600 transition">Skills</a>
+        <a href="#leadership" class="block py-2 text-gray-700 hover:text-indigo-600 transition">Leadership</a>
+        <a href="#contact" class="block py-2 text-gray-700 hover:text-indigo-600 transition">Contact</a>
+    </div>
+
+    <!-- Hero Section -->
+    <section class="gradient-bg text-white py-20">
+        <div class="container mx-auto px-4">
+            <div class="flex flex-col md:flex-row items-center">
+                <div class="md:w-1/2 mb-10 md:mb-0">
+                    <h1 class="text-4xl sm:text-5xl font-bold mb-4">Hi, I'm <span class="text-yellow-300">Shreyan Datta</span></h1>
+                    <p class="text-xl sm:text-2xl mb-8">Ph.D. Candidate in Nanophotonics & Biosensing</p>
+                    <p class="text-lg opacity-90 mb-8 max-w-lg">Specializing in nanophotonics and plasmonics with 4+ years of hands-on experience in optimizing fabrication processes and advanced material characterization methods.</p>
+                    <div class="flex space-x-4">
+                        <a href="#contact" class="bg-white text-indigo-600 px-6 py-3 rounded-full font-medium hover:bg-gray-100 transition">Contact Me</a>
+                        <a href="#experience" class="border-2 border-white text-white px-6 py-3 rounded-full font-medium hover:bg-white hover:text-indigo-600 transition">View Experience</a>
+                    </div>
+                </div>
+                <div class="md:w-1/2 flex justify-center">
+                    <div class="w-64 h-64 rounded-full bg-white p-2">
+                        <div class="w-full h-full rounded-full overflow-hidden bg-indigo-200 flex items-center justify-center">
+                            <svg class="w-40 h-40 text-indigo-500" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                                <path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd"></path>
+                            </svg>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- About Section -->
+    <section id="about" class="py-20 bg-white">
+        <div class="container mx-auto px-4">
+            <h2 class="text-3xl font-bold text-center mb-16">About Me</h2>
+            <div class="flex flex-col md:flex-row">
+                <div class="md:w-1/2 mb-10 md:mb-0 pr-0 md:pr-10">
+                    <h3 class="text-2xl font-semibold mb-6">Who I Am</h3>
+                    <p class="text-gray-700 mb-4">
+                        I'm a Ph.D. candidate in Electrical Engineering specializing in nanophotonics and plasmonics. With over 4 years of hands-on experience, I've developed expertise in optimizing fabrication processes and advanced material characterization methods including FIB-SEM, EDS, AFM, UV-Vis, FTIR, and Raman spectroscopy.
+                    </p>
+                    <p class="text-gray-700 mb-4">
+                        My research has led to multiple publications and a patent application. I'm proficient in wafer-scale fabrication, CMOS-compatible nanofabrication, and over 10 industry-standard cleanroom techniques for semiconductor processing.
+                    </p>
+                    <p class="text-gray-700">
+                        When I'm not in the lab, I'm actively involved in academic leadership roles, including serving as Vice President of the Electrical Engineering Graduate Student Association at SUNY Buffalo.
+                    </p>
+                </div>
+                <div class="md:w-1/2">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                        <div class="card bg-white rounded-lg shadow-md p-6 border border-gray-100">
+                            <div class="text-4xl font-bold text-indigo-600 mb-2">5+</div>
+                            <h4 class="text-xl font-semibold mb-2">Years Experience</h4>
+                            <p class="text-gray-600">In nanophotonics, plasmonics, and advanced material characterization</p>
+                        </div>
+                        <div class="card bg-white rounded-lg shadow-md p-6 border border-gray-100">
+                            <div class="text-4xl font-bold text-indigo-600 mb-2">3+</div>
+                            <h4 class="text-xl font-semibold mb-2">Publications</h4>
+                            <p class="text-gray-600">In prestigious journals and conferences in the field</p>
+                        </div>
+                        <div class="card bg-white rounded-lg shadow-md p-6 border border-gray-100">
+                            <div class="text-4xl font-bold text-indigo-600 mb-2">10+</div>
+                            <h4 class="text-xl font-semibold mb-2">Cleanroom Techniques</h4>
+                            <p class="text-gray-600">Industry-standard semiconductor processing methods</p>
+                        </div>
+                        <div class="card bg-white rounded-lg shadow-md p-6 border border-gray-100">
+                            <div class="text-4xl font-bold text-indigo-600 mb-2">Ph.D.</div>
+                            <h4 class="text-xl font-semibold mb-2">Electrical Engineering</h4>
+                            <p class="text-gray-600">The State University of New York at Buffalo, 2026</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Experience Section -->
+    <section id="experience" class="py-20 bg-gray-50">
+        <div class="container mx-auto px-4">
+            <h2 class="text-3xl font-bold text-center mb-16">Work Experience</h2>
+            <div class="max-w-4xl mx-auto">
+                <div class="timeline-container relative mb-12">
+                    <div class="timeline-dot"></div>
+                    <div class="bg-white rounded-lg shadow-md p-6 mb-8">
+                        <h3 class="text-xl font-semibold text-gray-800">Image Processing Intern</h3>
+                        <p class="text-indigo-600">Metalenz</p>
+                        <p class="text-gray-500 mb-4">May 2025 - August 2025</p>
+                        <p class="text-gray-700 mb-4">Selected for a highly competitive internship focused on imaging and analysis of next-generation meta-optic biometric sensors.</p>
+                        <ul class="list-disc pl-5 text-gray-700 mb-4">
+                            <li>Will develop image processing algorithms for Scanning Electron Microscopy (SEM) based nanoscale feature extraction and variability analysis.</li>
+                            <li>Will perform data correlation studies and statistical analyses to link fabrication artifacts with device performance.</li>
+                            <li>Will operate Scanning Electron Microscopy (SEM) systems for in-house data collection and analysis of metasurface optics.</li>
+                        </ul>
+                        <div class="flex flex-wrap gap-2 mt-4">
+                            <span class="bg-indigo-100 text-indigo-800 text-xs font-medium px-3 py-1 rounded-full">Image Processing</span>
+                            <span class="bg-indigo-100 text-indigo-800 text-xs font-medium px-3 py-1 rounded-full">SEM</span>
+                            <span class="bg-indigo-100 text-indigo-800 text-xs font-medium px-3 py-1 rounded-full">Meta-optics</span>
+                            <span class="bg-indigo-100 text-indigo-800 text-xs font-medium px-3 py-1 rounded-full">Data Analysis</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="timeline-container relative mb-12">
+                    <div class="timeline-dot"></div>
+                    <div class="bg-white rounded-lg shadow-md p-6 mb-8">
+                        <h3 class="text-xl font-semibold text-gray-800">PhD Candidate</h3>
+                        <p class="text-indigo-600">The State University of New York at Buffalo</p>
+                        <p class="text-gray-500 mb-4">August 2021 - Present</p>
+                        <p class="text-gray-700 mb-4">Conducting advanced research in nanophotonics and biosensing, focusing on novel fabrication methods and material characterization.</p>
+                        <ul class="list-disc pl-5 text-gray-700 mb-4">
+                            <li>Developed a novel, cost-effective three-step cleanroom fabrication process leveraging Electron Beam Evaporation, Rapid Thermal Annealing (RTA), and Liquid Gallium to create high-performance Surface-Enhanced Raman Spectroscopy (SERS) sensors.</li>
+                            <li>Reduced fabrication costs by over 85% compared to conventional E-beam and photolithography-based processes.</li>
+                            <li>Performed advanced material characterization using SEM, EDS, FTIR, AFM, and UV-Vis Spectroscopy.</li>
+                            <li>Engineered sensors that achieved more than 100× enhancement in Raman signal intensity.</li>
+                            <li>Pioneered a commercially viable SERS platform with potential applications in medical diagnostics, environmental monitoring, and chemical detection.</li>
+                        </ul>
+                        <div class="flex flex-wrap gap-2 mt-4">
+                            <span class="bg-indigo-100 text-indigo-800 text-xs font-medium px-3 py-1 rounded-full">Nanophotonics</span>
+                            <span class="bg-indigo-100 text-indigo-800 text-xs font-medium px-3 py-1 rounded-full">SERS</span>
+                            <span class="bg-indigo-100 text-indigo-800 text-xs font-medium px-3 py-1 rounded-full">Cleanroom Fabrication</span>
+                            <span class="bg-indigo-100 text-indigo-800 text-xs font-medium px-3 py-1 rounded-full">Material Characterization</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="timeline-container relative mb-12">
+                    <div class="timeline-dot"></div>
+                    <div class="bg-white rounded-lg shadow-md p-6 mb-8">
+                        <h3 class="text-xl font-semibold text-gray-800">Lecturer/Instructor</h3>
+                        <p class="text-indigo-600">The State University of New York at Buffalo</p>
+                        <p class="text-gray-500 mb-4">July 2022, July 2024</p>
+                        <p class="text-gray-700 mb-4">Taught Signals and Systems to 20+ students, covering advanced techniques (Fourier, Laplace, Z-transforms) for real-world signal processing applications across various engineering systems.</p>
+                        <div class="flex flex-wrap gap-2 mt-4">
+                            <span class="bg-indigo-100 text-indigo-800 text-xs font-medium px-3 py-1 rounded-full">Teaching</span>
+                            <span class="bg-indigo-100 text-indigo-800 text-xs font-medium px-3 py-1 rounded-full">Signal Processing</span>
+                            <span class="bg-indigo-100 text-indigo-800 text-xs font-medium px-3 py-1 rounded-full">Engineering Education</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="timeline-container relative mb-12">
+                    <div class="timeline-dot"></div>
+                    <div class="bg-white rounded-lg shadow-md p-6 mb-8">
+                        <h3 class="text-xl font-semibold text-gray-800">Graduate Teaching Assistant</h3>
+                        <p class="text-indigo-600">The State University of New York at Buffalo</p>
+                        <p class="text-gray-500 mb-4">August 2021 - December 2024</p>
+                        <ul class="list-disc pl-5 text-gray-700 mb-4">
+                            <li>Basic Electrical Circuits Laboratory: Guided 120+ students in designing circuits with OpAmps, MOSFETs, CMOS, and BJTs.</li>
+                            <li>Electrical Engineering Concepts for Non-Majors: Mentored 80+ students in circuit theory through three-phase systems.</li>
+                            <li>Digital Principles: Assisted 120+ students in designing digital circuits from logic gates to state machines.</li>
+                        </ul>
+                        <div class="flex flex-wrap gap-2 mt-4">
+                            <span class="bg-indigo-100 text-indigo-800 text-xs font-medium px-3 py-1 rounded-full">Teaching</span>
+                            <span class="bg-indigo-100 text-indigo-800 text-xs font-medium px-3 py-1 rounded-full">Circuit Design</span>
+                            <span class="bg-indigo-100 text-indigo-800 text-xs font-medium px-3 py-1 rounded-full">Digital Electronics</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="timeline-container relative mb-12">
+                    <div class="timeline-dot"></div>
+                    <div class="bg-white rounded-lg shadow-md p-6 mb-8">
+                        <h3 class="text-xl font-semibold text-gray-800">Visiting Research Scholar</h3>
+                        <p class="text-indigo-600">University at Kentucky</p>
+                        <p class="text-gray-500 mb-4">May 2020 - May 2021</p>
+                        <ul class="list-disc pl-5 text-gray-700 mb-4">
+                            <li>Computationally explored polymorphic nanophotonic ALU, optimizing 14nm CMOS and 45nm/32nm Silicon Photonics integration.</li>
+                            <li>Derived five key scalability guidelines improving computational throughput and contributing to next-gen logic architectures.</li>
+                            <li>Collaborated with leading photonics researchers, utilizing MATLAB for system-level performance simulations, achieving close to 70% reduction in latency and 30% increase in frequency.</li>
+                        </ul>
+                        <div class="flex flex-wrap gap-2 mt-4">
+                            <span class="bg-indigo-100 text-indigo-800 text-xs font-medium px-3 py-1 rounded-full">Silicon Photonics</span>
+                            <span class="bg-indigo-100 text-indigo-800 text-xs font-medium px-3 py-1 rounded-full">CMOS Integration</span>
+                            <span class="bg-indigo-100 text-indigo-800 text-xs font-medium px-3 py-1 rounded-full">MATLAB</span>
+                            <span class="bg-indigo-100 text-indigo-800 text-xs font-medium px-3 py-1 rounded-full">Simulation</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="timeline-container relative">
+                    <div class="timeline-dot"></div>
+                    <div class="bg-white rounded-lg shadow-md p-6">
+                        <h3 class="text-xl font-semibold text-gray-800">Summer Research Intern</h3>
+                        <p class="text-indigo-600">Indian Institute of Science Bangalore</p>
+                        <p class="text-gray-500 mb-4">May 2019 - July 2019</p>
+                        <p class="text-gray-700 mb-4">Explored optical communication components, simulated modulators, and proposed an optical full adder, published in IEEE.</p>
+                        <div class="flex flex-wrap gap-2 mt-4">
+                            <span class="bg-indigo-100 text-indigo-800 text-xs font-medium px-3 py-1 rounded-full">Optical Communications</span>
+                            <span class="bg-indigo-100 text-indigo-800 text-xs font-medium px-3 py-1 rounded-full">Simulation</span>
+                            <span class="bg-indigo-100 text-indigo-800 text-xs font-medium px-3 py-1 rounded-full">IEEE Publication</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Featured Projects Section -->
+    <section class="py-20 bg-white">
+        <div class="container mx-auto px-4">
+            <h2 class="text-3xl font-bold text-center mb-16">Featured Projects</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-5xl mx-auto">
+                <div class="project-card bg-white rounded-lg shadow-md overflow-hidden">
+                    <div class="h-48 bg-indigo-100 flex items-center justify-center">
+                        <!-- SERS Sensor SVG Illustration -->
+                        <svg class="w-full h-full" viewBox="0 0 800 400" xmlns="http://www.w3.org/2000/svg">
+                            <defs>
+                                <linearGradient id="sersGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                                    <stop offset="0%" style="stop-color:#4f46e5;stop-opacity:1" />
+                                    <stop offset="100%" style="stop-color:#7e22ce;stop-opacity:1" />
+                                </linearGradient>
+                                <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
+                                    <feGaussianBlur stdDeviation="8" result="blur" />
+                                    <feComposite in="SourceGraphic" in2="blur" operator="over" />
+                                </filter>
+                            </defs>
+                            
+                            <!-- Base substrate -->
+                            <rect x="100" y="250" width="600" height="30" fill="#d1d5db" />
+                            
+                            <!-- Liquid gallium layer -->
+                            <rect x="100" y="220" width="600" height="30" fill="#94a3b8" />
+                            
+                            <!-- Nanoparticles -->
+                            <g filter="url(#glow)">
+                                <circle cx="150" cy="200" r="15" fill="url(#sersGradient)" />
+                                <circle cx="200" cy="190" r="12" fill="url(#sersGradient)" />
+                                <circle cx="250" cy="205" r="10" fill="url(#sersGradient)" />
+                                <circle cx="300" cy="195" r="14" fill="url(#sersGradient)" />
+                                <circle cx="350" cy="200" r="11" fill="url(#sersGradient)" />
+                                <circle cx="400" cy="190" r="13" fill="url(#sersGradient)" />
+                                <circle cx="450" cy="205" r="12" fill="url(#sersGradient)" />
+                                <circle cx="500" cy="195" r="10" fill="url(#sersGradient)" />
+                                <circle cx="550" cy="200" r="15" fill="url(#sersGradient)" />
+                                <circle cx="600" cy="190" r="11" fill="url(#sersGradient)" />
+                                <circle cx="650" cy="205" r="13" fill="url(#sersGradient)" />
+                            </g>
+                            
+                            <!-- Laser beam -->
+                            <path d="M400,50 L400,180" stroke="#ef4444" stroke-width="4" stroke-dasharray="10,5" />
+                            <polygon points="400,180 390,160 410,160" fill="#ef4444" />
+                            
+                            <!-- Scattered light -->
+                            <g opacity="0.7">
+                                <path d="M400,200 L350,100" stroke="#fcd34d" stroke-width="2" />
+                                <path d="M400,200 L450,100" stroke="#fcd34d" stroke-width="2" />
+                                <path d="M400,200 L300,120" stroke="#fcd34d" stroke-width="2" />
+                                <path d="M400,200 L500,120" stroke="#fcd34d" stroke-width="2" />
+                                <path d="M400,200 L370,80" stroke="#fcd34d" stroke-width="2" />
+                                <path d="M400,200 L430,80" stroke="#fcd34d" stroke-width="2" />
+                            </g>
+                            
+                            <!-- Detector -->
+                            <rect x="500" y="80" width="60" height="40" fill="#1e40af" />
+                            <rect x="510" y="90" width="40" height="20" fill="#93c5fd" />
+                            
+                            <!-- Labels -->
+                            <text x="400" y="30" text-anchor="middle" fill="#1e293b" font-size="16" font-weight="bold">Raman Spectroscopy</text>
+                            <text x="400" y="290" text-anchor="middle" fill="#1e293b" font-size="14">SERS Substrate</text>
+                            <text x="560" y="90" text-anchor="middle" fill="white" font-size="12">Detector</text>
+                        </svg>
+                    </div>
+                    <div class="p-6">
+                        <h3 class="text-xl font-semibold text-gray-800 mb-2">Novel SERS Sensor Platform</h3>
+                        <p class="text-gray-700 mb-4">Developed a cost-effective three-step cleanroom fabrication process for high-performance Surface-Enhanced Raman Spectroscopy sensors, reducing costs by 85% while achieving 100× signal enhancement.</p>
+                        <div class="flex flex-wrap gap-2 mb-4">
+                            <span class="skill-tag bg-gray-100 text-gray-800 text-xs font-medium px-3 py-1 rounded-full">Nanofabrication</span>
+                            <span class="skill-tag bg-gray-100 text-gray-800 text-xs font-medium px-3 py-1 rounded-full">SERS</span>
+                            <span class="skill-tag bg-gray-100 text-gray-800 text-xs font-medium px-3 py-1 rounded-full">Biosensing</span>
+                        </div>
+                        <div class="flex space-x-3">
+                            <a href="#" class="text-indigo-600 hover:text-indigo-800 font-medium">Patent Filed</a>
+                            <span class="text-gray-400">|</span>
+                            <a href="#" class="text-indigo-600 hover:text-indigo-800 font-medium">Publication</a>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="project-card bg-white rounded-lg shadow-md overflow-hidden">
+                    <div class="h-48 bg-indigo-100 flex items-center justify-center">
+                        <!-- Nanophotonic ALU SVG Illustration -->
+                        <svg class="w-full h-full" viewBox="0 0 800 400" xmlns="http://www.w3.org/2000/svg">
+                            <defs>
+                                <linearGradient id="chipGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                                    <stop offset="0%" style="stop-color:#4f46e5;stop-opacity:1" />
+                                    <stop offset="100%" style="stop-color:#7e22ce;stop-opacity:1" />
+                                </linearGradient>
+                                <filter id="chipGlow" x="-20%" y="-20%" width="140%" height="140%">
+                                    <feGaussianBlur stdDeviation="5" result="blur" />
+                                    <feComposite in="SourceGraphic" in2="blur" operator="over" />
+                                </filter>
+                            </defs>
+                            
+                            <!-- Chip base -->
+                            <rect x="200" y="100" width="400" height="200" rx="10" fill="#1e293b" />
+                            
+                            <!-- Chip details -->
+                            <rect x="220" y="120" width="360" height="160" rx="5" fill="#334155" />
+                            
+                            <!-- Optical waveguides -->
+                            <path d="M220,150 H580" stroke="#38bdf8" stroke-width="3" />
+                            <path d="M220,180 H580" stroke="#38bdf8" stroke-width="3" />
+                            <path d="M220,210 H580" stroke="#38bdf8" stroke-width="3" />
+                            <path d="M220,240 H580" stroke="#38bdf8" stroke-width="3" />
+                            
+                            <!-- Vertical connections -->
+                            <path d="M280,120 V280" stroke="#38bdf8" stroke-width="3" />
+                            <path d="M360,120 V280" stroke="#38bdf8" stroke-width="3" />
+                            <path d="M440,120 V280" stroke="#38bdf8" stroke-width="3" />
+                            <path d="M520,120 V280" stroke="#38bdf8" stroke-width="3" />
+                            
+                            <!-- Optical components -->
+                            <g filter="url(#chipGlow)">
+                                <circle cx="280" cy="150" r="8" fill="url(#chipGradient)" />
+                                <circle cx="280" cy="180" r="8" fill="url(#chipGradient)" />
+                                <circle cx="280" cy="210" r="8" fill="url(#chipGradient)" />
+                                <circle cx="280" cy="240" r="8" fill="url(#chipGradient)" />
+                                
+                                <circle cx="360" cy="150" r="8" fill="url(#chipGradient)" />
+                                <circle cx="360" cy="180" r="8" fill="url(#chipGradient)" />
+                                <circle cx="360" cy="210" r="8" fill="url(#chipGradient)" />
+                                <circle cx="360" cy="240" r="8" fill="url(#chipGradient)" />
+                                
+                                <circle cx="440" cy="150" r="8" fill="url(#chipGradient)" />
+                                <circle cx="440" cy="180" r="8" fill="url(#chipGradient)" />
+                                <circle cx="440" cy="210" r="8" fill="url(#chipGradient)" />
+                                <circle cx="440" cy="240" r="8" fill="url(#chipGradient)" />
+                                
+                                <circle cx="520" cy="150" r="8" fill="url(#chipGradient)" />
+                                <circle cx="520" cy="180" r="8" fill="url(#chipGradient)" />
+                                <circle cx="520" cy="210" r="8" fill="url(#chipGradient)" />
+                                <circle cx="520" cy="240" r="8" fill="url(#chipGradient)" />
+                            </g>
+                            
+                            <!-- Chip pins -->
+                            <g>
+                                <rect x="200" y="310" width="10" height="20" fill="#d1d5db" />
+                                <rect x="230" y="310" width="10" height="20" fill="#d1d5db" />
+                                <rect x="260" y="310" width="10" height="20" fill="#d1d5db" />
+                                <rect x="290" y="310" width="10" height="20" fill="#d1d5db" />
+                                <rect x="320" y="310" width="10" height="20" fill="#d1d5db" />
+                                <rect x="350" y="310" width="10" height="20" fill="#d1d5db" />
+                                <rect x="380" y="310" width="10" height="20" fill="#d1d5db" />
+                                <rect x="410" y="310" width="10" height="20" fill="#d1d5db" />
+                                <rect x="440" y="310" width="10" height="20" fill="#d1d5db" />
+                                <rect x="470" y="310" width="10" height="20" fill="#d1d5db" />
+                                <rect x="500" y="310" width="10" height="20" fill="#d1d5db" />
+                                <rect x="530" y="310" width="10" height="20" fill="#d1d5db" />
+                                <rect x="560" y="310" width="10" height="20" fill="#d1d5db" />
+                                <rect x="590" y="310" width="10" height="20" fill="#d1d5db" />
+                            </g>
+                            
+                            <!-- Light beams -->
+                            <g opacity="0.7">
+                                <path d="M150,150 L220,150" stroke="#fcd34d" stroke-width="2" />
+                                <path d="M150,180 L220,180" stroke="#fcd34d" stroke-width="2" />
+                                <path d="M580,210 L650,210" stroke="#fcd34d" stroke-width="2" />
+                                <path d="M580,240 L650,240" stroke="#fcd34d" stroke-width="2" />
+                            </g>
+                            
+                            <!-- Labels -->
+                            <text x="400" y="70" text-anchor="middle" fill="#1e293b" font-size="16" font-weight="bold">Nanophotonic ALU</text>
+                            <text x="400" y="350" text-anchor="middle" fill="#1e293b" font-size="14">CMOS-Integrated Photonic Chip</text>
+                        </svg>
+                    </div>
+                    <div class="p-6">
+                        <h3 class="text-xl font-semibold text-gray-800 mb-2">CMOS-Integrated Nanophotonic ALU</h3>
+                        <p class="text-gray-700 mb-4">Explored polymorphic nanophotonic ALU design, optimizing integration of 14nm CMOS and 45nm/32nm Silicon Photonics, achieving 70% latency reduction and 30% frequency increase.</p>
+                        <div class="flex flex-wrap gap-2 mb-4">
+                            <span class="skill-tag bg-gray-100 text-gray-800 text-xs font-medium px-3 py-1 rounded-full">Silicon Photonics</span>
+                            <span class="skill-tag bg-gray-100 text-gray-800 text-xs font-medium px-3 py-1 rounded-full">CMOS Integration</span>
+                            <span class="skill-tag bg-gray-100 text-gray-800 text-xs font-medium px-3 py-1 rounded-full">MATLAB</span>
+                        </div>
+                        <div class="flex space-x-3">
+                            <a href="#" class="text-indigo-600 hover:text-indigo-800 font-medium">ACM Sensys Publication</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Education Section -->
+    <section id="education" class="py-20 bg-gray-50">
+        <div class="container mx-auto px-4">
+            <h2 class="text-3xl font-bold text-center mb-16">Education</h2>
+            <div class="max-w-4xl mx-auto">
+                <div class="timeline-container relative mb-12">
+                    <div class="timeline-dot"></div>
+                    <div class="bg-white rounded-lg shadow-md p-6">
+                        <h3 class="text-xl font-semibold text-gray-800">Doctor of Philosophy in Electrical Engineering</h3>
+                        <p class="text-indigo-600">The State University of New York at Buffalo</p>
+                        <p class="text-gray-500 mb-2">Expected January 2026</p>
+                        <p class="text-gray-700 mb-2">Specialization: Nanophotonics & Biosensing</p>
+                        <p class="text-gray-700">GPA: 3.9/4.0</p>
+                    </div>
+                </div>
+
+                <div class="timeline-container relative mb-12">
+                    <div class="timeline-dot"></div>
+                    <div class="bg-white rounded-lg shadow-md p-6">
+                        <h3 class="text-xl font-semibold text-gray-800">Master of Science in Electrical Engineering</h3>
+                        <p class="text-indigo-600">The State University of New York at Buffalo</p>
+                        <p class="text-gray-500 mb-2">May 2023</p>
+                        <p class="text-gray-700">GPA: 3.89/4.0</p>
+                    </div>
+                </div>
+
+                <div class="timeline-container relative">
+                    <div class="timeline-dot"></div>
+                    <div class="bg-white rounded-lg shadow-md p-6">
+                        <h3 class="text-xl font-semibold text-gray-800">Bachelor of Technology in Electronics and Communication Engineering</h3>
+                        <p class="text-indigo-600">National Institute of Technology Durgapur</p>
+                        <p class="text-gray-500 mb-2">May 2017</p>
+                        <p class="text-gray-700">GPA: 8.88/10.0</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Publications Section -->
+    <section id="publications" class="py-20 bg-white">
+        <div class="container mx-auto px-4">
+            <h2 class="text-3xl font-bold text-center mb-16">Publications</h2>
+            <div class="max-w-4xl mx-auto">
+                <div class="bg-white rounded-lg shadow-md p-6 mb-8">
+                    <h3 class="text-xl font-semibold text-gray-800">Surface‐Enhanced Raman Scattering Sensors Employing a Nanoparticle‐On‐Liquid‐Mirror (NPoLM) Architecture</h3>
+                    <p class="text-indigo-600 mb-2">Small Methods, 2024</p>
+                    <p class="text-gray-700 mb-4">Developed novel SERS sensors using a unique NPoLM architecture, demonstrating significant enhancement in Raman signal intensity for biosensing applications.</p>
+                    <div class="flex flex-wrap gap-2">
+                        <span class="bg-indigo-100 text-indigo-800 text-xs font-medium px-3 py-1 rounded-full">SERS</span>
+                        <span class="bg-indigo-100 text-indigo-800 text-xs font-medium px-3 py-1 rounded-full">Nanophotonics</span>
+                        <span class="bg-indigo-100 text-indigo-800 text-xs font-medium px-3 py-1 rounded-full">Biosensing</span>
+                    </div>
+                </div>
+
+                <div class="bg-white rounded-lg shadow-md p-6 mb-8">
+                    <h3 class="text-xl font-semibold text-gray-800">Design exploration and scalability analysis of a CMOS-integrated, polymorphic, nanophotonic arithmetic-logic unit</h3>
+                    <p class="text-indigo-600 mb-2">ACM Sensys, 2021</p>
+                    <p class="text-gray-700 mb-4">Explored the design and scalability of a CMOS-integrated nanophotonic ALU, providing guidelines for improving computational throughput in next-generation logic architectures.</p>
+                    <div class="flex flex-wrap gap-2">
+                        <span class="bg-indigo-100 text-indigo-800 text-xs font-medium px-3 py-1 rounded-full">Silicon Photonics</span>
+                        <span class="bg-indigo-100 text-indigo-800 text-xs font-medium px-3 py-1 rounded-full">CMOS Integration</span>
+                        <span class="bg-indigo-100 text-indigo-800 text-xs font-medium px-3 py-1 rounded-full">Nanophotonics</span>
+                    </div>
+                </div>
+
+                <div class="text-center mt-8">
+                    <a href="https://scholar.google.com/citations?user=lnPpNeMAAAAJ&hl=en" target="_blank" class="inline-flex items-center text-indigo-600 hover:text-indigo-800 font-medium">
+                        View more on Google Scholar
+                        <svg class="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path>
+                        </svg>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Skills Section -->
+    <section id="skills" class="py-20 bg-gray-50">
+        <div class="container mx-auto px-4">
+            <h2 class="text-3xl font-bold text-center mb-16">Skills & Expertise</h2>
+            <div class="max-w-4xl mx-auto">
+                <div class="bg-white rounded-lg shadow-md p-8 mb-10">
+                    <h3 class="text-2xl font-semibold mb-6">Core Competencies</h3>
+                    <div class="flex flex-wrap justify-center" id="core-skills-container">
+                        <div class="skill-bubble bg-indigo-100 text-indigo-800 font-medium" data-skill="nanophotonics" data-icon="📡">Nanophotonics</div>
+                        <div class="skill-bubble bg-purple-100 text-purple-800 font-medium" data-skill="plasmonics" data-icon="✨">Plasmonics</div>
+                        <div class="skill-bubble bg-blue-100 text-blue-800 font-medium" data-skill="biosensing" data-icon="🔬">Biosensing</div>
+                        <div class="skill-bubble bg-green-100 text-green-800 font-medium" data-skill="nanofabrication" data-icon="⚙️">Nanofabrication</div>
+                        <div class="skill-bubble bg-yellow-100 text-yellow-800 font-medium" data-skill="image-analysis" data-icon="🔍">Image Analysis</div>
+                        <div class="skill-bubble bg-red-100 text-red-800 font-medium" data-skill="optoelectronics" data-icon="💡">Optoelectronics</div>
+                    </div>
+                </div>
+                
+                <div class="bg-white rounded-lg shadow-md p-8 mb-10">
+                    <h3 class="text-2xl font-semibold mb-6">Clean Room & Optical Laboratory</h3>
+                    <div class="flex flex-wrap justify-center">
+                        <div class="skill-bubble bg-indigo-100 text-indigo-800 px-4 py-2" data-skill="3d-printing" data-icon="🖨️">3D Printing</div>
+                        <div class="skill-bubble bg-blue-100 text-blue-800 px-4 py-2" data-skill="afm" data-icon="🔬">Atomic Force Microscopy</div>
+                        <div class="skill-bubble bg-purple-100 text-purple-800 px-4 py-2" data-skill="ald" data-icon="⚛️">Atomic Layer Deposition</div>
+                        <div class="skill-bubble bg-indigo-100 text-indigo-800 px-4 py-2" data-skill="e-beam" data-icon="⚡">Electron Beam Evaporation</div>
+                        <div class="skill-bubble bg-blue-100 text-blue-800 px-4 py-2" data-skill="eds" data-icon="📊">Energy-Dispersive X-ray Spectroscopy</div>
+                        <div class="skill-bubble bg-purple-100 text-purple-800 px-4 py-2" data-skill="ftir" data-icon="📈">FTIR Spectroscopy</div>
+                        <div class="skill-bubble bg-indigo-100 text-indigo-800 px-4 py-2" data-skill="microfluidics" data-icon="💧">Microfluidics</div>
+                        <div class="skill-bubble bg-blue-100 text-blue-800 px-4 py-2" data-skill="optical-microscopy" data-icon="🔎">Optical Microscopy</div>
+                        <div class="skill-bubble bg-purple-100 text-purple-800 px-4 py-2" data-skill="photolithography" data-icon="📷">Photolithography</div>
+                        <div class="skill-bubble bg-indigo-100 text-indigo-800 px-4 py-2" data-skill="raman" data-icon="🌈">Raman Spectroscopy</div>
+                        <div class="skill-bubble bg-blue-100 text-blue-800 px-4 py-2" data-skill="rta" data-icon="🔥">Rapid Thermal Annealing</div>
+                        <div class="skill-bubble bg-purple-100 text-purple-800 px-4 py-2" data-skill="rie" data-icon="⚡">Reactive-ion Etching</div>
+                        <div class="skill-bubble bg-indigo-100 text-indigo-800 px-4 py-2" data-skill="sem" data-icon="🔬">Scanning Electron Microscopy</div>
+                        <div class="skill-bubble bg-blue-100 text-blue-800 px-4 py-2" data-skill="spin-coating" data-icon="🌀">Spin Coating</div>
+                        <div class="skill-bubble bg-purple-100 text-purple-800 px-4 py-2" data-skill="sputtering" data-icon="💨">Sputtering</div>
+                        <div class="skill-bubble bg-indigo-100 text-indigo-800 px-4 py-2" data-skill="uv-vis" data-icon="🌞">UV-Vis Spectroscopy</div>
+                        <div class="skill-bubble bg-blue-100 text-blue-800 px-4 py-2" data-skill="vacuum" data-icon="🌌">Vacuum Chambers</div>
+                    </div>
+                </div>
+                
+                <div class="bg-white rounded-lg shadow-md p-8">
+                    <h3 class="text-2xl font-semibold mb-6">Software</h3>
+                    <div class="flex flex-wrap justify-center">
+                        <div class="skill-bubble bg-indigo-100 text-indigo-800 px-4 py-2" data-skill="autocad" data-icon="📐">AutoCAD Inventor</div>
+                        <div class="skill-bubble bg-blue-100 text-blue-800 px-4 py-2" data-skill="fusion360" data-icon="🔄">Fusion 360</div>
+                        <div class="skill-bubble bg-purple-100 text-purple-800 px-4 py-2" data-skill="latex" data-icon="📝">LaTeX</div>
+                        <div class="skill-bubble bg-indigo-100 text-indigo-800 px-4 py-2" data-skill="lumerical" data-icon="💻">Lumerical FDTD</div>
+                        <div class="skill-bubble bg-blue-100 text-blue-800 px-4 py-2" data-skill="matlab" data-icon="📊">MATLAB</div>
+                        <div class="skill-bubble bg-purple-100 text-purple-800 px-4 py-2" data-skill="python" data-icon="🐍">Python</div>
+                        <div class="skill-bubble bg-indigo-100 text-indigo-800 px-4 py-2" data-skill="office" data-icon="📊">Microsoft Office</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Skill popup container -->
+        <div class="popup-overlay"></div>
+        <div class="skill-popup">
+            <div class="skill-icon mb-4"></div>
+            <h3 class="text-xl font-semibold mb-2 skill-title"></h3>
+            <p class="skill-description mb-4"></p>
+            <button class="close-popup bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700 transition">Close</button>
+        </div>
+    </section>
+
+    <!-- Achievements Section -->
+    <section class="py-20 bg-white">
+        <div class="container mx-auto px-4">
+            <h2 class="text-3xl font-bold text-center mb-16">Key Achievements</h2>
+            <div class="max-w-4xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-8">
+                <div class="bg-white rounded-lg shadow-md p-6 border-l-4 border-indigo-600">
+                    <div class="flex items-center mb-4">
+                        <svg class="w-8 h-8 text-indigo-600 mr-3" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                            <path fill-rule="evenodd" d="M6.267 3.455a3.066 3.066 0 001.745-.723 3.066 3.066 0 013.976 0 3.066 3.066 0 001.745.723 3.066 3.066 0 012.812 2.812c.051.643.304 1.254.723 1.745a3.066 3.066 0 010 3.976 3.066 3.066 0 00-.723 1.745 3.066 3.066 0 01-2.812 2.812 3.066 3.066 0 00-1.745.723 3.066 3.066 0 01-3.976 0 3.066 3.066 0 00-1.745-.723 3.066 3.066 0 01-2.812-2.812 3.066 3.066 0 00-.723-1.745 3.066 3.066 0 010-3.976 3.066 3.066 0 00.723-1.745 3.066 3.066 0 012.812-2.812zm7.44 5.252a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>
+                        </svg>
+                        <h3 class="text-xl font-semibold text-gray-800">1st Place Winner</h3>
+                    </div>
+                    <p class="text-gray-700">University at Buffalo, Electrical Engineering Department Poster Competition</p>
+                </div>
+
+                <div class="bg-white rounded-lg shadow-md p-6 border-l-4 border-indigo-600">
+                    <div class="flex items-center mb-4">
+                        <svg class="w-8 h-8 text-indigo-600 mr-3" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                            <path fill-rule="evenodd" d="M10 2a1 1 0 011 1v1.323l3.954 1.582 1.599-.8a1 1 0 01.894 1.79l-1.233.616 1.738 5.42a1 1 0 01-.285 1.05A3.989 3.989 0 0115 15a3.989 3.989 0 01-2.667-1.019 1 1 0 01-.285-1.05l1.715-5.349L11 6.477V16h2a1 1 0 110 2H7a1 1 0 110-2h2V6.477L6.237 7.582l1.715 5.349a1 1 0 01-.285 1.05A3.989 3.989 0 015 15a3.989 3.989 0 01-2.667-1.019 1 1 0 01-.285-1.05l1.738-5.42-1.233-.617a1 1 0 01.894-1.788l1.599.799L9 4.323V3a1 1 0 011-1z" clip-rule="evenodd"></path>
+                        </svg>
+                        <h3 class="text-xl font-semibold text-gray-800">Research Showcase</h3>
+                    </div>
+                    <p class="text-gray-700">Presented research at UB Student Excellence Showcase (2023), highlighting advancements in nanophotonics and biosensing.</p>
+                </div>
+
+                <div class="bg-white rounded-lg shadow-md p-6 border-l-4 border-indigo-600">
+                    <div class="flex items-center mb-4">
+                        <svg class="w-8 h-8 text-indigo-600 mr-3" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                            <path fill-rule="evenodd" d="M12.316 3.051a1 1 0 01.633 1.265l-4 12a1 1 0 11-1.898-.632l4-12a1 1 0 011.265-.633zM5.707 6.293a1 1 0 010 1.414L3.414 10l2.293 2.293a1 1 0 11-1.414 1.414l-3-3a1 1 0 010-1.414l3-3a1 1 0 011.414 0zm8.586 0a1 1 0 011.414 0l3 3a1 1 0 010 1.414l-3 3a1 1 0 11-1.414-1.414L16.586 10l-2.293-2.293a1 1 0 010-1.414z" clip-rule="evenodd"></path>
+                        </svg>
+                        <h3 class="text-xl font-semibold text-gray-800">Patent Filed</h3>
+                    </div>
+                    <p class="text-gray-700">Filed a provisional patent and International Patent Application (PCT) for sensors using liquid metal-based nanophotonic structures. Published as WO2024054949A1.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Leadership & Volunteering Section -->
+    <section id="leadership" class="py-20 bg-gray-50">
+        <div class="container mx-auto px-4">
+            <h2 class="text-3xl font-bold text-center mb-16">Leadership & Volunteering</h2>
+            <div class="max-w-4xl mx-auto">
+                <div class="timeline-container relative mb-12">
+                    <div class="timeline-dot"></div>
+                    <div class="bg-white rounded-lg shadow-md p-6">
+                        <h3 class="text-xl font-semibold text-gray-800">Vice President</h3>
+                        <p class="text-indigo-600">Electrical Engineering Graduate Student Association, SUNY Buffalo</p>
+                        <p class="text-gray-500 mb-4">September 2023 - September 2025</p>
+                        <p class="text-gray-700">Led initiatives benefiting 150+ graduate students through professional development and funding support.</p>
+                    </div>
+                </div>
+
+                <div class="timeline-container relative mb-12">
+                    <div class="timeline-dot"></div>
+                    <div class="bg-white rounded-lg shadow-md p-6">
+                        <h3 class="text-xl font-semibold text-gray-800">Primary Grant Reviewer</h3>
+                        <p class="text-indigo-600">Mark Diamond Research Fund (MDRF), SUNY Buffalo</p>
+                        <p class="text-gray-500 mb-4">April 2025</p>
+                        <p class="text-gray-700">Reviewed and scored graduate research funding proposals as part of the MDRF selection committee. Contributed to funding decisions by evaluating technical merit, feasibility, and research impact.</p>
+                    </div>
+                </div>
+
+                <div class="timeline-container relative mb-12">
+                    <div class="timeline-dot"></div>
+                    <div class="bg-white rounded-lg shadow-md p-6">
+                        <h3 class="text-xl font-semibold text-gray-800">Innovation Cell Head</h3>
+                        <p class="text-indigo-600">Entrepreneurship Development Cell, NIT Durgapur</p>
+                        <p class="text-gray-500 mb-4">August 2017 - May 2021</p>
+                        <p class="text-gray-700">Helped organize the 2nd largest Entrepreneurship Summit in Eastern India (2021) with over 2000 attendees, alongside year-round entrepreneurial initiatives. Secured seed funding for NIT Durgapur-based student startups.</p>
+                    </div>
+                </div>
+
+                <div class="timeline-container relative mb-12">
+                    <div class="timeline-dot"></div>
+                    <div class="bg-white rounded-lg shadow-md p-6">
+                        <h3 class="text-xl font-semibold text-gray-800">Student Union Representative, Executive Council Member</h3>
+                        <p class="text-indigo-600">National Institute of Technology Durgapur</p>
+                        <p class="text-gray-500 mb-4">July 2018 - May 2021</p>
+                        <p class="text-gray-700">Raised department concerns at student council, collaborated with administration during COVID lockdown to ease student learning and academic progress.</p>
+                    </div>
+                </div>
+
+                <div class="timeline-container relative">
+                    <div class="timeline-dot"></div>
+                    <div class="bg-white rounded-lg shadow-md p-6">
+                        <h3 class="text-xl font-semibold text-gray-800">Training and Placement Coordinator</h3>
+                        <p class="text-indigo-600">National Institute of Technology Durgapur</p>
+                        <p class="text-gray-500 mb-4">March 2019 - May 2021</p>
+                        <p class="text-gray-700">Spearheaded partnerships with 100+ corporations, streamlining hiring logistics and increasing student job placements by 71%. Led a 22-member team, assisting 600+ peers in securing roles at top firms.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Contact Section -->
+    <section id="contact" class="py-20 bg-white">
+        <div class="container mx-auto px-4">
+            <h2 class="text-3xl font-bold text-center mb-16">Contact Me</h2>
+            <div class="max-w-4xl mx-auto bg-white rounded-lg shadow-md overflow-hidden">
+                <div class="flex flex-col md:flex-row">
+                    <div class="md:w-1/2 gradient-bg p-8 text-white">
+                        <h3 class="text-2xl font-semibold mb-6">Get In Touch</h3>
+                        <p class="mb-8">Feel free to reach out for research collaborations, speaking engagements, or to discuss potential opportunities.</p>
+                        
+                        <div class="flex items-start mb-6">
+                            <svg class="w-6 h-6 mr-4 mt-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path>
+                            </svg>
+                            <div>
+                                <p class="font-semibold mb-1">Email</p>
+                                <p>shreyand@buffalo.edu</p>
+                            </div>
+                        </div>
+                        
+                        <div class="flex items-start mb-6">
+                            <svg class="w-6 h-6 mr-4 mt-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"></path>
+                            </svg>
+                            <div>
+                                <p class="font-semibold mb-1">Phone</p>
+                                <p>+1 716 604 7352</p>
+                            </div>
+                        </div>
+                        
+                        <div class="flex items-start">
+                            <svg class="w-6 h-6 mr-4 mt-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                            </svg>
+                            <div>
+                                <p class="font-semibold mb-1">Location</p>
+                                <p>Buffalo, New York</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="md:w-1/2 p-8">
+                        <h3 class="text-2xl font-semibold text-gray-800 mb-6">Connect With Me</h3>
+                        <div class="flex flex-col space-y-4">
+                            <a href="https://www.linkedin.com/in/shreyan-datta/" target="_blank" class="flex items-center text-gray-700 hover:text-indigo-600 transition">
+                                <svg class="w-6 h-6 mr-4" fill="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                    <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/>
+                                </svg>
+                                LinkedIn
+                            </a>
+                            <a href="https://scholar.google.com/citations?user=lnPpNeMAAAAJ&hl=en" target="_blank" class="flex items-center text-gray-700 hover:text-indigo-600 transition">
+                                <svg class="w-6 h-6 mr-4" fill="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                    <path d="M5.242 13.769L0 9.5 12 0l12 9.5-5.242 4.269C17.548 11.249 14.978 9.5 12 9.5c-2.977 0-5.548 1.748-6.758 4.269zM12 10a7 7 0 1 0 0 14 7 7 0 0 0 0-14z"/>
+                                </svg>
+                                Google Scholar
+                            </a>
+                            <a href="#" class="flex items-center text-gray-700 hover:text-indigo-600 transition">
+                                <svg class="w-6 h-6 mr-4" fill="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                    <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/>
+                                </svg>
+                                GitHub
+                            </a>
+                            <a href="#" class="flex items-center text-gray-700 hover:text-indigo-600 transition">
+                                <svg class="w-6 h-6 mr-4" fill="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                    <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
+                                </svg>
+                                YouTube
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="bg-gray-800 text-white py-10">
+        <div class="container mx-auto px-4">
+            <div class="flex flex-col md:flex-row justify-between items-center">
+                <div class="mb-6 md:mb-0">
+                    <h3 class="text-2xl font-bold mb-2">Shreyan Datta</h3>
+                    <p class="text-gray-400">Ph.D. Candidate in<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'93ca086c6154f5ff',t:'MTc0NjcxODU4OC4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script>
