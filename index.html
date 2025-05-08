@@ -17,6 +17,12 @@
         background-size: cover;
         background-position: center;
         }
+        /* Semi-transparent white rectangle for text */
+        .semi-transparent-bg {
+        background-color: rgba(255, 255, 255, 0.6);  /* White with 60% opacity */
+        border-radius: 8px;  /* Optional: smooth corners */
+        backdrop-filter: blur(10px); /* Optional: adds a slight blur behind the text */
+        }
         .gradient-bg {
             background: linear-gradient(135deg, #4f46e5 0%, #7e22ce 100%);
         }
@@ -191,12 +197,14 @@
         <div class="container mx-auto px-4">
             <div class="flex flex-col md:flex-row items-center">
                 <div class="md:w-1/2 mb-10 md:mb-0">
+                    <div class="semi-transparent-bg p-8">
                     <h1 class="text-4xl sm:text-5xl font-bold mb-4">Hi, I'm <span class="text-yellow-300">Shreyan Datta</span></h1>
                     <p class="text-xl sm:text-2xl mb-8">Ph.D. Candidate in Nanophotonics & Biosensing</p>
                     <p class="text-lg opacity-90 mb-8 max-w-lg">Specializing in nanophotonics and plasmonics with 4+ years of hands-on experience in optimizing fabrication processes and advanced material characterization methods.</p>
-                    <div class="flex space-x-4">
-                        <a href="#contact" class="bg-white text-indigo-600 px-6 py-3 rounded-full font-medium hover:bg-gray-100 transition">Contact Me</a>
-                        <a href="#experience" class="border-2 border-white text-white px-6 py-3 rounded-full font-medium hover:bg-white hover:text-indigo-600 transition">View Experience</a>
+                        <div class="flex space-x-4">
+                            <a href="#contact" class="bg-white text-indigo-600 px-6 py-3 rounded-full font-medium hover:bg-gray-100 transition">Contact Me</a>
+                            <a href="#experience" class="border-2 border-white text-white px-6 py-3 rounded-full font-medium hover:bg-white hover:text-indigo-600 transition">View Experience</a>
+                        </div>
                     </div>
                 </div>
                 <div class="md:w-1/2 flex justify-center">
