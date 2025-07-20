@@ -11,10 +11,19 @@
             font-family: 'Inter', sans-serif;
             scroll-behavior: smooth;
         }
-        /* Background for the hero section */
-        #hero-section {
-        background: linear-gradient(135deg, #4f46e5 0%, #7e22ce 100%);
-        }
+       #hero-section {
+    position: relative;
+}
+
+#hero-section::before {
+    content: "";
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.4); /* dark overlay */
+    z-index: 1;
+}
 
         /* Semi-transparent white rectangle for text */
         .semi-transparent-bg {
@@ -156,18 +165,17 @@
             height: 100px;
             margin: 0 auto 20px;
         }
-        /* Animated image in About section */
-.about-moving-image-wrapper {
+       .about-moving-image-wrapper {
     position: relative;
     overflow: hidden;
     height: 250px;
     margin-top: 40px;
+    background: white; /* Optional for contrast */
 }
 
 .moving-image-container {
-    position: absolute;
-    top: 0;
     display: flex;
+    width: max-content;
     animation: scrollImage 20s linear infinite;
 }
 
@@ -177,12 +185,13 @@
     flex-shrink: 0;
 }
 
+/* Use transform instead of 'left' */
 @keyframes scrollImage {
     0% {
-        left: 100%;
+        transform: translateX(0%);
     }
     100% {
-        left: -100%;
+        transform: translateX(-50%);
     }
 }
 
@@ -221,31 +230,46 @@
         <a href="#contact" class="block py-2 text-gray-700 hover:text-indigo-600 transition">Contact</a>
     </div>
 
-    <!-- Hero Section -->
-    <section id="hero-section" class="text-white py-20"">
-        <div class="container mx-auto px-4">
-            <div class="flex flex-col md:flex-row items-center">
-                <div class="md:w-1/2 mb-10 md:mb-0">
-                    <div class="semi-transparent-bg p-8">
-                    <h1 class="text-4xl sm:text-5xl font-bold mb-4">Hi, I'm <span class="text-indigo-700">Shreyan Datta</span></h1>
-                    <p class="text-xl sm:text-2xl mb-8 text-indigo-600">Ph.D. Candidate in Nanophotonics & Biosensing</p>
-                    <p class="text-lg mb-8 max-w-lg text-indigo-600">Specializing in nanophotonics and plasmonics with 4+ years of hands-on experience in optimizing fabrication processes and advanced material characterization methods.</p>
-                        <div class="flex space-x-4">
-                            <a href="#contact" class="bg-white text-indigo-600 px-6 py-3 rounded-full font-medium hover:bg-gray-100 transition">Contact Me</a>
-                            <a href="#experience" class="border-2 border-white text-white px-6 py-3 rounded-full font-medium hover:bg-white hover:text-indigo-600 transition">View Experience</a>
-                        </div>
+   <!-- Hero Section -->
+<section id="hero-section" class="relative text-white py-20 overflow-hidden">
+    
+    <!-- Background video -->
+    <video autoplay muted loop playsinline class="absolute top-0 left-0 w-full h-full object-cover z-0">
+        <source src="portfoliocovervideo.mp4" type="video/mp4">
+        Your browser does not support the video tag.
+    </video>
+
+    <!-- Content container on top -->
+    <div class="relative z-10 container mx-auto px-4">
+        <div class="flex flex-col md:flex-row items-center">
+            <div class="md:w-1/2 mb-10 md:mb-0">
+                <div class="semi-transparent-bg p-8">
+                    <h1 class="text-4xl sm:text-5xl font-bold mb-4">
+                        Hi, I'm <span class="text-indigo-700">Shreyan Datta</span>
+                    </h1>
+                    <p class="text-xl sm:text-2xl mb-8 text-indigo-600">
+                        Ph.D. Candidate in Nanophotonics & Biosensing
+                    </p>
+                    <p class="text-lg mb-8 max-w-lg text-indigo-600">
+                        Specializing in nanophotonics and plasmonics with 4+ years of hands-on experience in optimizing fabrication processes and advanced material characterization methods.
+                    </p>
+                    <div class="flex space-x-4">
+                        <a href="#contact" class="bg-white text-indigo-600 px-6 py-3 rounded-full font-medium hover:bg-gray-100 transition">Contact Me</a>
+                        <a href="#experience" class="border-2 border-white text-white px-6 py-3 rounded-full font-medium hover:bg-white hover:text-indigo-600 transition">View Experience</a>
                     </div>
                 </div>
-                <div class="md:w-1/2 flex justify-center">
-                    <div class="w-64 h-64 rounded-full bg-white p-2">
-                        <div class="w-full h-full rounded-full overflow-hidden bg-indigo-200 flex items-center justify-center">
-                            <img src="LinkedIn Profile pic 5th March 2025.png" alt="Shreyan Datta" class="w-full h-full object-cover rounded-full">
-                        </div>
+            </div>
+            <div class="md:w-1/2 flex justify-center">
+                <div class="w-64 h-64 rounded-full bg-white p-2">
+                    <div class="w-full h-full rounded-full overflow-hidden bg-indigo-200 flex items-center justify-center">
+                        <img src="LinkedIn Profile pic 5th March 2025.png" alt="Shreyan Datta" class="w-full h-full object-cover rounded-full">
                     </div>
                 </div>
             </div>
         </div>
-    </section>
+    </div>
+</section>
+
 
     <!-- About Section -->
     <section id="about" class="py-20 bg-white">
