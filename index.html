@@ -13,10 +13,9 @@
         }
         /* Background for the hero section */
         #hero-section {
-        background-image: url('GitWebCover.png'); /* Update to your image */
-        background-size: cover;
-        background-position: center;
+        background: linear-gradient(135deg, #4f46e5 0%, #7e22ce 100%);
         }
+
         /* Semi-transparent white rectangle for text */
         .semi-transparent-bg {
         background-color: rgba(255, 255, 255, 0.6);  /* White with 60% opacity */
@@ -157,6 +156,36 @@
             height: 100px;
             margin: 0 auto 20px;
         }
+        /* Animated image in About section */
+.about-moving-image-wrapper {
+    position: relative;
+    overflow: hidden;
+    height: 250px;
+    margin-top: 40px;
+}
+
+.moving-image-container {
+    position: absolute;
+    top: 0;
+    display: flex;
+    animation: scrollImage 20s linear infinite;
+}
+
+.moving-image-container img {
+    height: 250px;
+    margin-right: 50px;
+    flex-shrink: 0;
+}
+
+@keyframes scrollImage {
+    0% {
+        left: 100%;
+    }
+    100% {
+        left: -100%;
+    }
+}
+
     </style>
 </head>
 <body class="bg-gray-50">
@@ -259,6 +288,13 @@
                         </div>
                     </div>
                 </div>
+            </div>
+        </div>
+         <!-- Scrolling image animation -->
+        <div class="about-moving-image-wrapper">
+            <div class="moving-image-container">
+                <img src="GitWebCover.png" alt="Animated Cover">
+                <img src="GitWebCover.png" alt="Animated Cover">
             </div>
         </div>
     </section>
