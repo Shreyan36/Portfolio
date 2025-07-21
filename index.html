@@ -456,65 +456,13 @@
             <h2 class="text-3xl font-bold text-center mb-16">Featured Projects</h2>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-5xl mx-auto">
                 <div class="project-card bg-white rounded-lg shadow-md overflow-hidden">
-                    <div class="h-48 bg-indigo-100 flex items-center justify-center">
-                        <!-- SERS Sensor SVG Illustration -->
-                        <svg class="w-full h-full" viewBox="0 0 800 400" xmlns="http://www.w3.org/2000/svg">
-                            <defs>
-                                <linearGradient id="sersGradient" x1="0%" y1="0%" x2="100%" y2="0%">
-                                    <stop offset="0%" style="stop-color:#4f46e5;stop-opacity:1" />
-                                    <stop offset="100%" style="stop-color:#7e22ce;stop-opacity:1" />
-                                </linearGradient>
-                                <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
-                                    <feGaussianBlur stdDeviation="8" result="blur" />
-                                    <feComposite in="SourceGraphic" in2="blur" operator="over" />
-                                </filter>
-                            </defs>
-                            
-                            <!-- Base substrate -->
-                            <rect x="100" y="250" width="600" height="30" fill="#d1d5db" />
-                            
-                            <!-- Liquid gallium layer -->
-                            <rect x="100" y="220" width="600" height="30" fill="#94a3b8" />
-                            
-                            <!-- Nanoparticles -->
-                            <g filter="url(#glow)">
-                                <circle cx="150" cy="200" r="15" fill="url(#sersGradient)" />
-                                <circle cx="200" cy="190" r="12" fill="url(#sersGradient)" />
-                                <circle cx="250" cy="205" r="10" fill="url(#sersGradient)" />
-                                <circle cx="300" cy="195" r="14" fill="url(#sersGradient)" />
-                                <circle cx="350" cy="200" r="11" fill="url(#sersGradient)" />
-                                <circle cx="400" cy="190" r="13" fill="url(#sersGradient)" />
-                                <circle cx="450" cy="205" r="12" fill="url(#sersGradient)" />
-                                <circle cx="500" cy="195" r="10" fill="url(#sersGradient)" />
-                                <circle cx="550" cy="200" r="15" fill="url(#sersGradient)" />
-                                <circle cx="600" cy="190" r="11" fill="url(#sersGradient)" />
-                                <circle cx="650" cy="205" r="13" fill="url(#sersGradient)" />
-                            </g>
-                            
-                            <!-- Laser beam -->
-                            <path d="M400,50 L400,180" stroke="#ef4444" stroke-width="4" stroke-dasharray="10,5" />
-                            <polygon points="400,180 390,160 410,160" fill="#ef4444" />
-                            
-                            <!-- Scattered light -->
-                            <g opacity="0.7">
-                                <path d="M400,200 L350,100" stroke="#fcd34d" stroke-width="2" />
-                                <path d="M400,200 L450,100" stroke="#fcd34d" stroke-width="2" />
-                                <path d="M400,200 L300,120" stroke="#fcd34d" stroke-width="2" />
-                                <path d="M400,200 L500,120" stroke="#fcd34d" stroke-width="2" />
-                                <path d="M400,200 L370,80" stroke="#fcd34d" stroke-width="2" />
-                                <path d="M400,200 L430,80" stroke="#fcd34d" stroke-width="2" />
-                            </g>
-                            
-                            <!-- Detector -->
-                            <rect x="500" y="80" width="60" height="40" fill="#1e40af" />
-                            <rect x="510" y="90" width="40" height="20" fill="#93c5fd" />
-                            
-                            <!-- Labels -->
-                            <text x="400" y="30" text-anchor="middle" fill="#1e293b" font-size="16" font-weight="bold">Raman Spectroscopy</text>
-                            <text x="400" y="290" text-anchor="middle" fill="#1e293b" font-size="14">SERS Substrate</text>
-                            <text x="560" y="90" text-anchor="middle" fill="white" font-size="12">Detector</text>
-                        </svg>
-                    </div>
+                    <div class="h-48 overflow-hidden">
+    <video autoplay muted loop playsinline class="w-full h-full object-cover">
+        <source src="sers_sensor_video.mp4" type="video/mp4" />
+        Your browser does not support the video tag.
+    </video>
+</div>
+
                     <div class="p-6">
                         <h3 class="text-xl font-semibold text-gray-800 mb-2">Novel SERS Sensor Platform</h3>
                         <p class="text-gray-700 mb-4">Developed a cost-effective three-step cleanroom fabrication process for high-performance Surface-Enhanced Raman Spectroscopy sensors, reducing costs by <strong>85%</strong> while achieving <strong>100× signal enhancement</strong>.</p>
@@ -532,92 +480,13 @@
                 </div>
 
                 <div class="project-card bg-white rounded-lg shadow-md overflow-hidden">
-                    <div class="h-48 bg-indigo-100 flex items-center justify-center">
-                        <!-- Nanophotonic ALU SVG Illustration -->
-                        <svg class="w-full h-full" viewBox="0 0 800 400" xmlns="http://www.w3.org/2000/svg">
-                            <defs>
-                                <linearGradient id="chipGradient" x1="0%" y1="0%" x2="100%" y2="0%">
-                                    <stop offset="0%" style="stop-color:#4f46e5;stop-opacity:1" />
-                                    <stop offset="100%" style="stop-color:#7e22ce;stop-opacity:1" />
-                                </linearGradient>
-                                <filter id="chipGlow" x="-20%" y="-20%" width="140%" height="140%">
-                                    <feGaussianBlur stdDeviation="5" result="blur" />
-                                    <feComposite in="SourceGraphic" in2="blur" operator="over" />
-                                </filter>
-                            </defs>
-                            
-                            <!-- Chip base -->
-                            <rect x="200" y="100" width="400" height="200" rx="10" fill="#1e293b" />
-                            
-                            <!-- Chip details -->
-                            <rect x="220" y="120" width="360" height="160" rx="5" fill="#334155" />
-                            
-                            <!-- Optical waveguides -->
-                            <path d="M220,150 H580" stroke="#38bdf8" stroke-width="3" />
-                            <path d="M220,180 H580" stroke="#38bdf8" stroke-width="3" />
-                            <path d="M220,210 H580" stroke="#38bdf8" stroke-width="3" />
-                            <path d="M220,240 H580" stroke="#38bdf8" stroke-width="3" />
-                            
-                            <!-- Vertical connections -->
-                            <path d="M280,120 V280" stroke="#38bdf8" stroke-width="3" />
-                            <path d="M360,120 V280" stroke="#38bdf8" stroke-width="3" />
-                            <path d="M440,120 V280" stroke="#38bdf8" stroke-width="3" />
-                            <path d="M520,120 V280" stroke="#38bdf8" stroke-width="3" />
-                            
-                            <!-- Optical components -->
-                            <g filter="url(#chipGlow)">
-                                <circle cx="280" cy="150" r="8" fill="url(#chipGradient)" />
-                                <circle cx="280" cy="180" r="8" fill="url(#chipGradient)" />
-                                <circle cx="280" cy="210" r="8" fill="url(#chipGradient)" />
-                                <circle cx="280" cy="240" r="8" fill="url(#chipGradient)" />
-                                
-                                <circle cx="360" cy="150" r="8" fill="url(#chipGradient)" />
-                                <circle cx="360" cy="180" r="8" fill="url(#chipGradient)" />
-                                <circle cx="360" cy="210" r="8" fill="url(#chipGradient)" />
-                                <circle cx="360" cy="240" r="8" fill="url(#chipGradient)" />
-                                
-                                <circle cx="440" cy="150" r="8" fill="url(#chipGradient)" />
-                                <circle cx="440" cy="180" r="8" fill="url(#chipGradient)" />
-                                <circle cx="440" cy="210" r="8" fill="url(#chipGradient)" />
-                                <circle cx="440" cy="240" r="8" fill="url(#chipGradient)" />
-                                
-                                <circle cx="520" cy="150" r="8" fill="url(#chipGradient)" />
-                                <circle cx="520" cy="180" r="8" fill="url(#chipGradient)" />
-                                <circle cx="520" cy="210" r="8" fill="url(#chipGradient)" />
-                                <circle cx="520" cy="240" r="8" fill="url(#chipGradient)" />
-                            </g>
-                            
-                            <!-- Chip pins -->
-                            <g>
-                                <rect x="200" y="310" width="10" height="20" fill="#d1d5db" />
-                                <rect x="230" y="310" width="10" height="20" fill="#d1d5db" />
-                                <rect x="260" y="310" width="10" height="20" fill="#d1d5db" />
-                                <rect x="290" y="310" width="10" height="20" fill="#d1d5db" />
-                                <rect x="320" y="310" width="10" height="20" fill="#d1d5db" />
-                                <rect x="350" y="310" width="10" height="20" fill="#d1d5db" />
-                                <rect x="380" y="310" width="10" height="20" fill="#d1d5db" />
-                                <rect x="410" y="310" width="10" height="20" fill="#d1d5db" />
-                                <rect x="440" y="310" width="10" height="20" fill="#d1d5db" />
-                                <rect x="470" y="310" width="10" height="20" fill="#d1d5db" />
-                                <rect x="500" y="310" width="10" height="20" fill="#d1d5db" />
-                                <rect x="530" y="310" width="10" height="20" fill="#d1d5db" />
-                                <rect x="560" y="310" width="10" height="20" fill="#d1d5db" />
-                                <rect x="590" y="310" width="10" height="20" fill="#d1d5db" />
-                            </g>
-                            
-                            <!-- Light beams -->
-                            <g opacity="0.7">
-                                <path d="M150,150 L220,150" stroke="#fcd34d" stroke-width="2" />
-                                <path d="M150,180 L220,180" stroke="#fcd34d" stroke-width="2" />
-                                <path d="M580,210 L650,210" stroke="#fcd34d" stroke-width="2" />
-                                <path d="M580,240 L650,240" stroke="#fcd34d" stroke-width="2" />
-                            </g>
-                            
-                            <!-- Labels -->
-                            <text x="400" y="70" text-anchor="middle" fill="#1e293b" font-size="16" font-weight="bold">Nanophotonic ALU</text>
-                            <text x="400" y="350" text-anchor="middle" fill="#1e293b" font-size="14">CMOS-Integrated Photonic Chip</text>
-                        </svg>
-                    </div>
+                   <div class="h-48 overflow-hidden">
+    <video autoplay muted loop playsinline class="w-full h-full object-cover">
+        <source src="alu_video.mp4" type="video/mp4" />
+        Your browser does not support the video tag.
+    </video>
+</div>
+
                     <div class="p-6">
                         <h3 class="text-xl font-semibold text-gray-800 mb-2">CMOS-Integrated Nanophotonic ALU</h3>
                         <p class="text-gray-700 mb-4">Explored <strong>polymorphic nanophotonic ALU design</strong>, optimizing integration of <strong>14nm CMOS and 45nm/32nm Silicon Photonics</strong>, achieving <strong>70%</strong> latency reduction and <strong>30%</strong> frequency increase.</p>
