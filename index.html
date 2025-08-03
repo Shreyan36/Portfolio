@@ -20,6 +20,32 @@
     position: relative;
 }
 
+.chatbot-wrapper {
+    position: fixed;
+    bottom: 20px;       /* Distance from bottom */
+    right: 80px;        /* Adjust to align with chatbot bubble */
+    z-index: 9999;
+    pointer-events: none; /* So clicks pass through to the chat bubble */
+}
+
+.chatbot-label {
+    background: rgba(0,0,0,0.75);
+    color: white;
+    font-family: 'Inter', sans-serif;
+    font-size: 14px;
+    padding: 8px 14px;
+    border-radius: 20px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+    animation: floatText 2s ease-in-out infinite alternate;
+}
+
+@keyframes floatText {
+    from { transform: translateY(0px); opacity: 0.9; }
+    to   { transform: translateY(-4px); opacity: 1; }
+}
+
+
+        
  @keyframes floating {
     0% { transform: translateY(0); }
     50% { transform: translateY(-8px); }
@@ -877,11 +903,35 @@
     popupImage.src = "";
   });
 </script>
+                    <div class="chatbot-wrapper">
+  <div class="chatbot-label">💬 Chat to know more</div>
+</div>
 <script>
 (function(){if(!window.chatbase||window.chatbase("getState")!=="initialized"){window.chatbase=(...arguments)=>{if(!window.chatbase.q){window.chatbase.q=[]}window.chatbase.q.push(arguments)};window.chatbase=new Proxy(window.chatbase,{get(target,prop){if(prop==="q"){return target.q}return(...args)=>target(prop,...args)}})}const onLoad=function(){const script=document.createElement("script");script.src="https://www.chatbase.co/embed.min.js";script.id="BJs3Rf3x2HGBGQYxach3Z";script.domain="www.chatbase.co";document.body.appendChild(script)};if(document.readyState==="complete"){onLoad()}else{window.addEventListener("load",onLoad)}})();
 </script>
+                    <script>
+  // Observe DOM changes to detect Chatbase popup opening
+  const chatLabel = document.querySelector('.chatbot-wrapper');
+
+  const observer = new MutationObserver(() => {
+    const chatPopup = document.querySelector('iframe[title="Chatbase Widget"]');
+    if (chatPopup) {
+      // Hide label if the iframe becomes visible
+      const rect = chatPopup.getBoundingClientRect();
+      if (rect.width > 0 && rect.height > 0) {
+        chatLabel.style.display = 'none';
+      } else {
+        chatLabel.style.display = 'block';
+      }
+    }
+  });
+
+  observer.observe(document.body, { childList: true, subtree: true });
+</script>
+
                 
                 </body>
 </html>    
                     
+
 
