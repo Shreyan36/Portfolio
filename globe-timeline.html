@@ -1,0 +1,487 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Shreyan • Globe Timeline</title>
+<link rel="preconnect" href="https://unpkg.com">
+<style>
+  :root{
+    --bg:#0b0f17; --panel:#111827; --muted:#94a3b8; --ink:#e5e7eb; --brand:#7c3aed;
+    --accent:#22d3ee; --good:#10b981; --warn:#f59e0b;
+  }
+  *{box-sizing:border-box}
+  html,body{height:100%}
+  body{
+    margin:0; background:radial-gradient(1200px 800px at 70% 20%, #0f172a 0%, #0b0f17 55%, #06080d 100%);
+    color:var(--ink); font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Inter, Roboto, "Helvetica Neue", Arial;
+    overflow:hidden;
+  }
+  /* Canvas container */
+  #scene{position:fixed; inset:0; z-index:0}
+  /* HUD panel */
+  .panel{
+    position:fixed; left:24px; bottom:24px; z-index:2;
+    width:min(580px, calc(100% - 48px)); max-width:580px;
+    background:rgba(17,24,39,.85); backdrop-filter: blur(12px);
+    border:1px solid rgba(148,163,184,.15); border-radius:16px; padding:20px 16px;
+    box-shadow: 0 10px 35px rgba(0,0,0,.35);
+  }
+  .hdr{display:flex; align-items:center; gap:10px; margin-bottom:8px}
+  .dot{width:10px; height:10px; border-radius:50%; background:var(--brand); box-shadow:0 0 16px var(--brand)}
+  .title{font-weight:700; letter-spacing:.2px}
+  .step{margin-top:6px; font-size:14px; color:var(--muted)}
+  .big{font-size:18px; color:var(--ink); margin:6px 0 2px; font-weight:600}
+  /* Stepper */
+  .controls{
+    display:flex; align-items:center; justify-content:space-between; gap:10px; margin-top:12px
+  }
+  .tags{display:flex; flex-wrap:wrap; gap:8px}
+  .tag{font-size:12px; color:#cbd5e1; background:rgba(124,58,237,.15);
+    border:1px solid rgba(124,58,237,.35); padding:6px 10px; border-radius:999px}
+  .btns{display:flex; gap:10px}
+  button{
+    all:unset; background:linear-gradient(180deg, #8b5cf6, #7c3aed 60%, #6d28d9);
+    color:#fff; padding:10px 14px; border-radius:12px; font-weight:600; font-size:14px;
+    cursor:pointer; box-shadow: 0 8px 20px rgba(124,58,237,.35);
+  }
+  button.secondary{
+    background:transparent; color:#e2e8f0; border:1px solid rgba(226,232,240,.2);
+    box-shadow:none;
+  }
+  button:disabled{opacity:.5; cursor:not-allowed}
+  /* Top right legend */
+  .legend{
+    position:fixed; right:20px; top:20px; z-index:2; display:flex; gap:10px; align-items:center;
+    background:rgba(17,24,39,.7); border:1px solid rgba(148,163,184,.18); border-radius:12px; padding:8px 12px;
+    color:#cbd5e1; font-size:12px
+  }
+  .chip{display:flex; align-items:center; gap:6px}
+  .pin{width:10px; height:10px; border-radius:50%}
+  .pin.home{background:var(--good); box-shadow:0 0 12px var(--good)}
+  .pin.study{background:var(--accent); box-shadow:0 0 12px var(--accent)}
+  .pin.work{background:#f472b6; box-shadow:0 0 12px #f472b6}
+  .pin.flight{background:var(--warn); box-shadow:0 0 12px var(--warn)}
+  /* Tooltip */
+  #tip{
+    position:fixed; z-index:3; pointer-events:none; transform:translate(-50%,-120%);
+    background:rgba(15,23,42,.9); color:#e2e8f0; border:1px solid rgba(148,163,184,.25);
+    padding:8px 10px; font-size:12px; border-radius:8px; display:none; white-space:nowrap;
+  }
+  /* Responsive */
+  @media (max-width:600px){
+    .panel{left:12px; right:12px; width:auto}
+    .big{font-size:16px}
+  }
+</style>
+</head>
+<body>
+<div id="scene"></div>
+
+<div class="legend">
+  <div class="chip"><span class="pin home"></span> Origin</div>
+  <div class="chip"><span class="pin study"></span> Study</div>
+  <div class="chip"><span class="pin work"></span> Work</div>
+  <div class="chip"><span class="pin flight"></span> Flight Path</div>
+</div>
+
+<div id="tip"></div>
+
+<div class="panel">
+  <div class="hdr"><span class="dot"></span><div class="title">Globe Timeline • Shreyan</div></div>
+  <div class="big" id="headline">Birth • Burdwan, India</div>
+  <div class="step" id="copy">
+    Starting point of the journey.
+  </div>
+  <div class="controls">
+    <div class="tags" id="tags"></div>
+    <div class="btns">
+      <button class="secondary" id="prev">Prev</button>
+      <button id="next">Next</button>
+    </div>
+  </div>
+</div>
+
+<!-- Three.js & helpers -->
+<script src="https://unpkg.com/three@0.159.0/build/three.min.js"></script>
+<script src="https://unpkg.com/three@0.159.0/examples/js/controls/OrbitControls.js"></script>
+
+<script>
+/**
+ * Globe Timeline — Three.js
+ * Author: You (Shreyan)
+ * Notes:
+ *  - Great-circle arcs for flights
+ *  - Camera eases to each step
+ *  - Pins for origin/study/work
+ *  - No external frameworks beyond Three.js
+ */
+
+/* ---------- Utility: LatLng → 3D on sphere ---------- */
+const R = 1; // Earth radius unit
+const deg2rad = d => d * Math.PI / 180;
+function latLngToVec3(lat, lng, radius = R) {
+  const phi = deg2rad(90 - lat);
+  const theta = deg2rad(lng + 180);
+  return new THREE.Vector3(
+    -(radius * Math.sin(phi) * Math.cos(theta)),
+     radius * Math.cos(phi),
+     radius * Math.sin(phi) * Math.sin(theta)
+  );
+}
+
+/* ---------- Scene ---------- */
+const scene = new THREE.Scene();
+scene.fog = new THREE.FogExp2(0x06080d, 0.12);
+
+const renderer = new THREE.WebGLRenderer({ antialias:true, alpha:true });
+renderer.setSize(window.innerWidth, window.innerHeight);
+renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+document.getElementById('scene').appendChild(renderer.domElement);
+
+const camera = new THREE.PerspectiveCamera(45, window.innerWidth/window.innerHeight, 0.1, 100);
+camera.position.set(0, 1.2, 3.2);
+
+const controls = new THREE.OrbitControls(camera, renderer.domElement);
+controls.enableDamping = true;
+controls.enablePan = false;
+controls.minDistance = 1.6;
+controls.maxDistance = 6;
+controls.autoRotate = true;
+controls.autoRotateSpeed = 0.4;
+
+/* ---------- Lights ---------- */
+const hemi = new THREE.HemisphereLight(0xbfd4ff, 0x0b0f17, 0.9);
+scene.add(hemi);
+const dir = new THREE.DirectionalLight(0xffffff, 0.9);
+dir.position.set(5, 3, 2);
+scene.add(dir);
+
+/* ---------- Stars background ---------- */
+const starsGeo = new THREE.BufferGeometry();
+const starCount = 2000;
+const positions = new Float32Array(starCount * 3);
+for (let i=0;i<starCount;i++){
+  const r = 40 + Math.random()*40;
+  const theta = Math.random()*Math.PI*2;
+  const phi = Math.acos((Math.random()*2)-1);
+  positions[i*3+0] = r * Math.sin(phi) * Math.cos(theta);
+  positions[i*3+1] = r * Math.cos(phi);
+  positions[i*3+2] = r * Math.sin(phi) * Math.sin(theta);
+}
+starsGeo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+const starsMat = new THREE.PointsMaterial({ color:0x98a2b3, size:0.1, sizeAttenuation:true, transparent:true, opacity:0.7 });
+scene.add(new THREE.Points(starsGeo, starsMat));
+
+/* ---------- Earth ---------- */
+const earthGroup = new THREE.Group();
+scene.add(earthGroup);
+
+// Earth texture
+const texLoader = new THREE.TextureLoader();
+const earthTex = texLoader.load("https://unpkg.com/three-globe/example/img/earth-dark.jpg");
+const earthBump = texLoader.load("https://unpkg.com/three-globe/example/img/earth-topology.png");
+
+const earth = new THREE.Mesh(
+  new THREE.SphereGeometry(R, 96, 96),
+  new THREE.MeshPhongMaterial({
+    map: earthTex,
+    bumpMap: earthBump,
+    bumpScale: 0.02,
+    specular: new THREE.Color("#222"),
+    shininess: 12
+  })
+);
+earthGroup.add(earth);
+
+// Atmosphere glow
+const atmosphere = new THREE.Mesh(
+  new THREE.SphereGeometry(R*1.02, 64, 64),
+  new THREE.MeshBasicMaterial({ color:0x5eead4, transparent:true, opacity:0.08, blending:THREE.AdditiveBlending })
+);
+earthGroup.add(atmosphere);
+
+/* ---------- Pins ---------- */
+function makePin(color=0x22d3ee){
+  const g = new THREE.Group();
+  const cyl = new THREE.Mesh(
+    new THREE.ConeGeometry(0.012, 0.05, 12),
+    new THREE.MeshStandardMaterial({ color, emissive: color, emissiveIntensity:0.35 })
+  );
+  cyl.rotation.x = Math.PI;
+  cyl.position.y = 0.04;
+  const orb = new THREE.Mesh(
+    new THREE.SphereGeometry(0.015, 16, 16),
+    new THREE.MeshStandardMaterial({ color, emissive: color, emissiveIntensity:0.6 })
+  );
+  g.add(orb, cyl);
+  return g;
+}
+function placePin(lat, lng, type="study"){
+  const color = type==="home"?0x10b981 : type==="study"?0x22d3ee : 0xf472b6;
+  const pin = makePin(color);
+  const pos = latLngToVec3(lat, lng, R+0.02);
+  pin.position.copy(pos);
+  // face outward
+  pin.lookAt(pos.clone().multiplyScalar(2));
+  earthGroup.add(pin);
+  return pin;
+}
+
+/* ---------- Arc (Flight) ---------- */
+function greatCircleCurve(lat1,lng1, lat2,lng2, altitude=0.35, segments=100){
+  // points on sphere
+  const vStart = latLngToVec3(lat1, lng1);
+  const vEnd   = latLngToVec3(lat2, lng2);
+  // mid control elevated
+  const vMid = vStart.clone().add(vEnd).multiplyScalar(0.5).normalize().multiplyScalar(R+altitude);
+  const curve = new THREE.CatmullRomCurve3([vStart, vMid, vEnd]);
+  return curve.getPoints(segments);
+}
+function arcMesh(points, color=0xf59e0b){
+  const geo = new THREE.BufferGeometry().setFromPoints(points);
+  const mat = new THREE.LineBasicMaterial({ color, transparent:true, opacity:0.85 });
+  return new THREE.Line(geo, mat);
+}
+
+/* ---------- Tiny "Plane" ---------- */
+function makePlane(color=0xf59e0b){
+  const g = new THREE.Group();
+  const body = new THREE.Mesh(
+    new THREE.ConeGeometry(0.015, 0.08, 8),
+    new THREE.MeshStandardMaterial({ color, metalness:.2, roughness:.3, emissive:color, emissiveIntensity:.2 })
+  );
+  body.rotation.x = Math.PI/2;
+  const wing = new THREE.Mesh(
+    new THREE.BoxGeometry(0.04, 0.003, 0.01),
+    new THREE.MeshStandardMaterial({ color })
+  );
+  wing.position.set(0, 0, 0);
+  g.add(body, wing);
+  return g;
+}
+
+/* ---------- Steps Data ---------- */
+const steps = [
+  {
+    key:"birth",
+    headline:"Birth • Burdwan, India",
+    copy:"Starting point of the journey.",
+    tags:["Origin","West Bengal"],
+    focus:{ lat:23.2324, lng:87.8615, dist:2.6, tilt:0.25 },
+    pins:[{lat:23.2324,lng:87.8615,type:"home", label:"Burdwan"}],
+    action:null
+  },
+  {
+    key:"school",
+    headline:"Schooling • Burdwan",
+    copy:"Formative years and early curiosity for science.",
+    tags:["Schooling","Foundation"],
+    focus:{ lat:23.2324, lng:87.8615, dist:2.2, tilt:0.15 },
+    pins:[{lat:23.2324,lng:87.8615,type:"home", label:"Burdwan"}],
+    action:null
+  },
+  {
+    key:"undergrad",
+    headline:"Undergraduate • NIT Durgapur",
+    copy:"Electronics and Communication Engineering at NIT Durgapur.",
+    tags:["NIT Durgapur","ECE","India"],
+    focus:{ lat:23.5204, lng:87.3119, dist:2.1, tilt:0.15 },
+    pins:[{lat:23.5204,lng:87.3119,type:"study", label:"NIT Durgapur"}],
+    action:null
+  },
+  {
+    key:"grad",
+    headline:"Graduate Studies • University at Buffalo",
+    copy:"Masters and PhD in Electrical Engineering at UB, Buffalo, USA.",
+    tags:["UB","Masters","PhD","USA"],
+    focus:{ lat:42.8864, lng:-78.8784, dist:2.3, tilt:0.2 },
+    pins:[{lat:42.8864,lng:-78.8784,type:"study", label:"Buffalo"}],
+    // Flight Kolkata -> Buffalo
+    action:{ type:"flight", from:{lat:22.5726,lng:88.3639,label:"Kolkata"}, to:{lat:42.8864,lng:-78.8784,label:"Buffalo"} }
+  },
+  {
+    key:"intern",
+    headline:"Internship • Boston, USA",
+    copy:"Nanofabrication and SEM process engineering internship experience in Boston.",
+    tags:["Internship","Nanofab","SEM"],
+    focus:{ lat:42.3601, lng:-71.0589, dist:2.1, tilt:0.2 },
+    pins:[{lat:42.3601,lng:-71.0589,type:"work", label:"Boston"}],
+    // Flight Buffalo -> Boston
+    action:{ type:"flight", from:{lat:42.8864,lng:-78.8784,label:"Buffalo"}, to:{lat:42.3601,lng:-71.0589,label:"Boston"} }
+  }
+];
+
+/* ---------- State & UI ---------- */
+const headlineEl = document.getElementById('headline');
+const copyEl = document.getElementById('copy');
+const tagsEl = document.getElementById('tags');
+const tipEl = document.getElementById('tip');
+const prevBtn = document.getElementById('prev');
+const nextBtn = document.getElementById('next');
+
+let current = 0;
+let pinObjects = [];
+let activeArc = null;
+let plane = null;
+let planeProg = 0;
+let planePath = null;
+
+function setUI(step){
+  headlineEl.textContent = step.headline;
+  copyEl.textContent = step.copy;
+  tagsEl.innerHTML = "";
+  step.tags.forEach(t=>{
+    const s = document.createElement('span');
+    s.className="tag"; s.textContent=t; tagsEl.appendChild(s);
+  });
+  prevBtn.disabled = (current===0);
+  nextBtn.disabled = (current===steps.length-1);
+}
+
+/* ---------- Camera easing to lat/lng ---------- */
+function easeCameraTo(lat, lng, dist=2.4, tilt=0.2, ms=1600){
+  // center earth so target point faces camera: rotate earthGroup
+  const target = latLngToVec3(lat, lng);
+  // Quaternion to rotate Earth so target points to camera -Z axis
+  const q1 = earthGroup.quaternion.clone();
+  const m = new THREE.Matrix4().lookAt(target, new THREE.Vector3(0,0,0), new THREE.Vector3(0,1,0));
+  const q2 = new THREE.Quaternion().setFromRotationMatrix(m).invert();
+  const start = { t:0 };
+  const startQ = q1.clone();
+  const endQ = q2.clone();
+
+  const camStart = camera.position.clone();
+  const camEnd = target.clone().normalize().multiplyScalar(dist);
+
+  const startTilt = controls.getPolarAngle ? controls.getPolarAngle() : 1.0;
+  const endTilt = tilt;
+
+  const t0 = performance.now();
+  function anim() {
+    const t = Math.min(1, (performance.now()-t0)/ms);
+    // smoothstep
+    const s = t*t*(3-2*t);
+    THREE.Quaternion.slerp(startQ, endQ, earthGroup.quaternion, s);
+    camera.position.lerpVectors(camStart, camEnd, s);
+    camera.lookAt(0,0,0);
+    if (t < 1) requestAnimationFrame(anim);
+  }
+  anim();
+}
+
+/* ---------- Add pins for a step ---------- */
+function clearPins(){
+  pinObjects.forEach(p=>earthGroup.remove(p)); pinObjects = [];
+}
+function showPins(step){
+  clearPins();
+  if (!step.pins) return;
+  step.pins.forEach(p=>{
+    const obj = placePin(p.lat, p.lng, p.type);
+    obj.userData = { label:p.label };
+    pinObjects.push(obj);
+  });
+}
+
+/* ---------- Tooltip on hover ---------- */
+const raycaster = new THREE.Raycaster();
+const mouse = new THREE.Vector2(-10,-10);
+renderer.domElement.addEventListener('mousemove', (e)=>{
+  const rect = renderer.domElement.getBoundingClientRect();
+  mouse.x = ((e.clientX - rect.left)/rect.width)*2 - 1;
+  mouse.y = -((e.clientY - rect.top)/rect.height)*2 + 1;
+});
+function updateTooltip(){
+  raycaster.setFromCamera(mouse, camera);
+  const intersects = raycaster.intersectObjects(pinObjects, true);
+  if (intersects.length){
+    const p = intersects[0].object.parent; // pin group
+    if (p && p.userData && p.userData.label){
+      tipEl.style.display = 'block';
+      tipEl.textContent = p.userData.label;
+      tipEl.style.left = (event.clientX || 0) + 'px';
+      tipEl.style.top  = (event.clientY || 0) + 'px';
+      return;
+    }
+  }
+  tipEl.style.display = 'none';
+}
+
+/* ---------- Flights ---------- */
+function clearFlight(){
+  if (activeArc){ earthGroup.remove(activeArc); activeArc = null; }
+  if (plane){ earthGroup.remove(plane); plane=null; planeProg=0; planePath=null; }
+}
+function launchFlight(from, to){
+  clearFlight();
+  const pts = greatCircleCurve(from.lat, from.lng, to.lat, to.lng, 0.35, 160);
+  activeArc = arcMesh(pts, 0xf59e0b);
+  earthGroup.add(activeArc);
+  plane = makePlane();
+  earthGroup.add(plane);
+  planePath = pts;
+  planeProg = 0;
+}
+
+/* ---------- Step runner ---------- */
+function runStep(i, first=false){
+  const step = steps[i];
+  setUI(step);
+  showPins(step);
+  // focus camera
+  easeCameraTo(step.focus.lat, step.focus.lng, step.focus.dist, step.focus.tilt, first?1200:1600);
+  // action
+  if (step.action && step.action.type==="flight"){
+    launchFlight(step.action.from, step.action.to);
+  } else {
+    clearFlight();
+  }
+}
+prevBtn.onclick = ()=>{ if (current>0){ current--; runStep(current); } };
+nextBtn.onclick = ()=>{ if (current<steps.length-1){ current++; runStep(current); } };
+
+/* ---------- Animate ---------- */
+function tick(){
+  requestAnimationFrame(tick);
+  controls.update();
+
+  // rotate earth subtly
+  earth.rotation.y += 0.00015;
+
+  // animate plane along path
+  if (plane && planePath){
+    planeProg = Math.min(1, planeProg + 0.003);
+    const idx = Math.floor(planeProg * (planePath.length-1));
+    const p = planePath[idx];
+    plane.position.set(p.x, p.y, p.z);
+    // orient plane along tangent
+    const p2 = planePath[Math.min(idx+1, planePath.length-1)];
+    const dir = new THREE.Vector3().subVectors(p2, p).normalize();
+    const up  = p.clone().normalize();
+    const quat = new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0,1,0), up);
+    const m = new THREE.Matrix4().lookAt(p, p2, up);
+    plane.quaternion.setFromRotationMatrix(m);
+    // glow opacity animation on arc
+    if (activeArc){
+      activeArc.material.opacity = 0.6 + 0.25*Math.sin(performance.now()*0.004);
+    }
+  }
+
+  updateTooltip();
+  renderer.render(scene, camera);
+}
+tick();
+
+/* ---------- Resize ---------- */
+addEventListener('resize', ()=>{
+  camera.aspect = innerWidth/innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(innerWidth, innerHeight);
+});
+
+/* ---------- Boot ---------- */
+runStep(current, true);
+</script>
+</body>
+</html>
