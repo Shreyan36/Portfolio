@@ -3,9 +3,9 @@
 <head>
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1"/>
-<title>Shreyan • Map Timeline (Safe Mode)</title>
+<title>Shreyan • Map Timeline (Fixed)</title>
 
-<!-- Leaflet (only dependency) -->
+<!-- Leaflet -->
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
@@ -19,14 +19,12 @@
     font:14px/1.45 system-ui,-apple-system,Segoe UI,Roboto,Inter,Arial}
   #map{position:fixed; inset:0}
 
-  /* Legend */
   .legend{position:fixed; top:12px; right:12px; z-index:5000; display:flex; gap:12px;
     background:rgba(15,22,43,.65); border:1px solid rgba(255,255,255,.08);
     padding:8px 12px; border-radius:14px; backdrop-filter:blur(8px)}
   .lg{display:flex; align-items:center; gap:6px; color:var(--muted)}
   .dot{width:10px; height:10px; border-radius:50%}
 
-  /* Bottom card */
   .card{position:fixed;left:16px;bottom:16px;z-index:5000;width:min(560px,calc(100% - 32px));
         background:rgba(15,22,43,.85);border:1px solid rgba(255,255,255,.06);border-radius:16px;
         padding:16px;backdrop-filter:blur(8px)}
@@ -40,7 +38,6 @@
   .btn.primary{background:linear-gradient(135deg,#6d28d9,#8b5cf6);border:0}
   .btn:disabled{opacity:.5;cursor:not-allowed}
 
-  /* Gallery popup (large) */
   .gallery{position:fixed;z-index:6000;display:none;width:min(960px,96vw);
            background:rgba(15,22,43,.98);border:1px solid rgba(255,255,255,.1);
            border-radius:16px;overflow:hidden;box-shadow:0 18px 60px rgba(0,0,0,.55)}
@@ -56,7 +53,6 @@
   .navPrev{left:10px} .navNext{right:10px}
   .galleryCaption{padding:10px 14px;color:#dbe7ff;border-top:1px solid rgba(255,255,255,.08)}
 
-  /* Pin hover hint */
   .leaflet-marker-icon.pin:hover{filter: drop-shadow(0 0 8px rgba(255,255,255,.5))}
 </style>
 </head>
@@ -64,14 +60,12 @@
 
 <div id="map" aria-label="Satellite map timeline"></div>
 
-<!-- legend -->
 <div class="legend">
   <div class="lg"><span class="dot" style="background:var(--origin)"></span>Origin</div>
   <div class="lg"><span class="dot" style="background:var(--study)"></span>Study</div>
   <div class="lg"><span class="dot" style="background:var(--work)"></span>Work</div>
 </div>
 
-<!-- bottom info card -->
 <div class="card">
   <div class="row">
     <div id="typeDot" class="dot" style="background:var(--origin)"></div>
@@ -85,7 +79,6 @@
   </div>
 </div>
 
-<!-- big gallery popup -->
 <div id="gallery" class="gallery" role="dialog" aria-modal="true" aria-label="Image gallery">
   <div class="galleryHeader">
     <div class="galleryTitle" id="gTitle">Location</div>
@@ -100,20 +93,28 @@
 
 <script>
 window.addEventListener('load', function () {
-  console.log('ℹ️ initializing');
-
-  /* ---------- helper (inline placeholder images) ---------- */
+  /* ---------- helpers ---------- */
   function imgPlaceholder(label, a,b){
     const svg = encodeURIComponent(
-  `<svg xmlns='http://www.w3.org/2000/svg' width='1600' height='900'>
-    <defs><linearGradient id='g' x1='0' y1='0' x2='1' y2='1'>
-      <stop offset='0%' stop-color='${a}'/><stop offset='100%' stop-color='${b}'/></linearGradient></defs>
-    <rect width='100%' height='100%' fill='url(#g)'/>
-    <g opacity='.08'><circle cx='800' cy='450' r='230' fill='#fff'/></g>
-    <text x='50%' y='50%' dominant-baseline='middle' text-anchor='middle'
-          font-family='system-ui,Arial' font-size='46' fill='rgba(255,255,255,0.95)'>${label}</text>
-  </svg>`);
+`<svg xmlns='http://www.w3.org/2000/svg' width='1600' height='900'>
+  <defs><linearGradient id='g' x1='0' y1='0' x2='1' y2='1'>
+    <stop offset='0%' stop-color='${a}'/><stop offset='100%' stop-color='${b}'/></linearGradient></defs>
+  <rect width='100%' height='100%' fill='url(#g)'/>
+  <g opacity='.08'><circle cx='800' cy='450' r='230' fill='#fff'/></g>
+  <text x='50%' y='50%' dominant-baseline='middle' text-anchor='middle'
+        font-family='system-ui,Arial' font-size='46' fill='rgba(255,255,255,0.95)'>${label}</text>
+</svg>`);
     return `data:image/svg+xml;charset=utf-8,${svg}`;
+  }
+
+  // Compute a bounding box in degrees for a city radius in km (no Circle.getBounds needed)
+  function cityBounds(lat, lon, radiusKm){
+    const latDelta = radiusKm / 111.0; // ~111 km per degree latitude
+    const cosLat   = Math.cos(lat * Math.PI/180);
+    const lonDelta = radiusKm / (111.0 * Math.max(0.0001, cosLat)); // avoid /0 near poles
+    const sw = L.latLng(lat - latDelta, lon - lonDelta);
+    const ne = L.latLng(lat + latDelta, lon + lonDelta);
+    return L.latLngBounds(sw, ne);
   }
 
   /* ---------- Data ---------- */
@@ -162,24 +163,17 @@ window.addEventListener('load', function () {
   const typeColor = t => t==='origin' ? '#14b8a6' : t==='study' ? '#60a5fa' : '#f59e0b';
 
   /* ---------- Map ---------- */
-  if (!window.L) {
-    alert('Leaflet failed to load. Check network or CDN.');
-    return;
-  }
-
   const map = L.map('map', {
     worldCopyJump:true, zoomControl:false, minZoom:2, maxZoom:18,
     center:[20,78], zoom:4, preferCanvas:true, zoomAnimation:true, inertia:true
   });
   L.control.zoom({ position:'bottomright' }).addTo(map);
 
-  // Satellite tiles (Esri). If your network blocks this, switch to OSM below.
   L.tileLayer(
     'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
     { attribution:'Tiles © Esri — Source: Esri, Maxar, Earthstar Geographics', crossOrigin:true }
   ).addTo(map);
-
-  // Fallback (uncomment to test quickly)
+  // Fallback if Esri blocks: uncomment below and comment Esri line above.
   // L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
   //   { attribution:'© OpenStreetMap contributors' }).addTo(map);
 
@@ -234,19 +228,18 @@ window.addEventListener('load', function () {
 
     const center = [step.lat, step.lon];
 
-    // 1) Zoom out (only if currently closer than OUT_ZOOM)
+    // 1) Zoom out first if currently closer than OUT_ZOOM
     if (map.getZoom() > OUT_ZOOM + 0.05){
       map.flyTo(map.getCenter(), OUT_ZOOM, {animate:true, duration:0.9});
       await waitMoveOrTimeout();
     }
 
-    // 2) Pan (fly) to new city at OUT_ZOOM
+    // 2) Fly to the new city at OUT_ZOOM
     map.flyTo(center, OUT_ZOOM, {animate:true, duration:1.0});
     await waitMoveOrTimeout();
 
-    // 3) Compute desired zoom to show the whole city radius
-    const circle = L.circle(center, { radius:(step.radiusKm||12)*1000 });
-    const bounds = circle.getBounds();
+    // 3) Compute desired zoom using math bounds (no Circle.getBounds)
+    const bounds = cityBounds(step.lat, step.lon, step.radiusKm || 12);
     let targetZ = map.getBoundsZoom(bounds, true, ZPAD);
     targetZ = Math.max(12, Math.min(15, targetZ)); // clamp
 
@@ -272,9 +265,8 @@ window.addEventListener('load', function () {
     btnNext.disabled = idx===steps.length-1;
 
     if (opts.instant){
-      // First load: go directly to city view without pre-zoom-out
-      const circle = L.circle([s.lat, s.lon], { radius:(s.radiusKm||12)*1000 });
-      const bounds = circle.getBounds();
+      // First load: set directly to a zoom that fits the city
+      const bounds = cityBounds(s.lat, s.lon, s.radiusKm || 12);
       const z = Math.max(12, Math.min(15, map.getBoundsZoom(bounds, true, ZPAD)));
       map.setView([s.lat, s.lon], z, {animate:false});
     } else {
@@ -311,7 +303,6 @@ window.addEventListener('load', function () {
     gImgs = step.gallery.slice();
     gIndex = 0;
 
-    // rebuild slides
     gViewport.querySelectorAll('img.galleryImg').forEach(n=>n.remove());
     gImgs.forEach((src, i)=>{
       const im = document.createElement('img');
@@ -331,8 +322,6 @@ window.addEventListener('load', function () {
   gPrev.onclick = ()=>{ if (!gImgs.length) return; gIndex=(gIndex-1+gImgs.length)%gImgs.length; updateCaption(steps[idx]); };
   gNext.onclick = ()=>{ if (!gImgs.length) return; gIndex=(gIndex+1)%gImgs.length; updateCaption(steps[idx]); };
   gClose.onclick= ()=>{ gallery.style.display='none'; };
-
-  console.log('✅ Timeline ready');
 });
 </script>
 </body>
