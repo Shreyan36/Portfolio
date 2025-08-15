@@ -1,0 +1,339 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Shreyan • Map Timeline (Safe Mode)</title>
+
+<!-- Leaflet (only dependency) -->
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+<style>
+  :root{
+    --bg:#0b1020; --panel:#0f162b; --text:#e5e7eb; --muted:#a8b3cf;
+    --origin:#14b8a6; --study:#60a5fa; --work:#f59e0b; --btn:#1b2442;
+  }
+  *{box-sizing:border-box}
+  html,body{height:100%;margin:0;background:var(--bg);color:var(--text);
+    font:14px/1.45 system-ui,-apple-system,Segoe UI,Roboto,Inter,Arial}
+  #map{position:fixed; inset:0}
+
+  /* Legend */
+  .legend{position:fixed; top:12px; right:12px; z-index:5000; display:flex; gap:12px;
+    background:rgba(15,22,43,.65); border:1px solid rgba(255,255,255,.08);
+    padding:8px 12px; border-radius:14px; backdrop-filter:blur(8px)}
+  .lg{display:flex; align-items:center; gap:6px; color:var(--muted)}
+  .dot{width:10px; height:10px; border-radius:50%}
+
+  /* Bottom card */
+  .card{position:fixed;left:16px;bottom:16px;z-index:5000;width:min(560px,calc(100% - 32px));
+        background:rgba(15,22,43,.85);border:1px solid rgba(255,255,255,.06);border-radius:16px;
+        padding:16px;backdrop-filter:blur(8px)}
+  .row{display:flex;align-items:center;gap:10px;margin-bottom:6px}
+  .h{font-weight:700;margin:0}
+  .t{color:#cfe0ff;margin:4px 0 8px}
+  .d{color:var(--muted)}
+  .controls{display:flex;gap:10px;margin-top:10px}
+  .btn{background:var(--btn);color:#e6eaff;border:1px solid rgba(255,255,255,.08);
+       padding:8px 14px;border-radius:12px;cursor:pointer}
+  .btn.primary{background:linear-gradient(135deg,#6d28d9,#8b5cf6);border:0}
+  .btn:disabled{opacity:.5;cursor:not-allowed}
+
+  /* Gallery popup (large) */
+  .gallery{position:fixed;z-index:6000;display:none;width:min(960px,96vw);
+           background:rgba(15,22,43,.98);border:1px solid rgba(255,255,255,.1);
+           border-radius:16px;overflow:hidden;box-shadow:0 18px 60px rgba(0,0,0,.55)}
+  .galleryHeader{display:flex;align-items:center;justify-content:space-between;
+                 padding:10px 14px;border-bottom:1px solid rgba(255,255,255,.08)}
+  .galleryTitle{font-weight:600}
+  .galleryClose{cursor:pointer;background:transparent;border:0;color:#fff;font-size:20px}
+  .galleryViewport{position:relative;width:100%;height:min(560px,60vh);background:#0a0f1e}
+  .galleryImg{position:absolute;inset:0;display:none;width:100%;height:100%;object-fit:cover}
+  .galleryImg.active{display:block}
+  .navBtn{position:absolute;top:50%;transform:translateY(-50%);background:rgba(0,0,0,.45);
+          border:1px solid rgba(255,255,255,.2);color:#fff;border-radius:10px;padding:8px 10px;cursor:pointer}
+  .navPrev{left:10px} .navNext{right:10px}
+  .galleryCaption{padding:10px 14px;color:#dbe7ff;border-top:1px solid rgba(255,255,255,.08)}
+
+  /* Pin hover hint */
+  .leaflet-marker-icon.pin:hover{filter: drop-shadow(0 0 8px rgba(255,255,255,.5))}
+</style>
+</head>
+<body>
+
+<div id="map" aria-label="Satellite map timeline"></div>
+
+<!-- legend -->
+<div class="legend">
+  <div class="lg"><span class="dot" style="background:var(--origin)"></span>Origin</div>
+  <div class="lg"><span class="dot" style="background:var(--study)"></span>Study</div>
+  <div class="lg"><span class="dot" style="background:var(--work)"></span>Work</div>
+</div>
+
+<!-- bottom info card -->
+<div class="card">
+  <div class="row">
+    <div id="typeDot" class="dot" style="background:var(--origin)"></div>
+    <div id="title" class="h">Birth • Burdwan, India</div>
+  </div>
+  <div id="subtitle" class="t">Starting point of the journey.</div>
+  <div id="desc" class="d">Use Next to follow the path. Hover or click a pin to open the gallery.</div>
+  <div class="controls">
+    <button id="prev" class="btn">Prev</button>
+    <button id="next" class="btn primary">Next</button>
+  </div>
+</div>
+
+<!-- big gallery popup -->
+<div id="gallery" class="gallery" role="dialog" aria-modal="true" aria-label="Image gallery">
+  <div class="galleryHeader">
+    <div class="galleryTitle" id="gTitle">Location</div>
+    <button class="galleryClose" id="gClose" aria-label="Close">×</button>
+  </div>
+  <div class="galleryViewport" id="gViewport">
+    <button class="navBtn navPrev" id="gPrev" aria-label="Previous">‹</button>
+    <button class="navBtn navNext" id="gNext" aria-label="Next">›</button>
+  </div>
+  <div class="galleryCaption" id="gCaption">Caption</div>
+</div>
+
+<script>
+window.addEventListener('load', function () {
+  console.log('ℹ️ initializing');
+
+  /* ---------- helper (inline placeholder images) ---------- */
+  function imgPlaceholder(label, a,b){
+    const svg = encodeURIComponent(
+  `<svg xmlns='http://www.w3.org/2000/svg' width='1600' height='900'>
+    <defs><linearGradient id='g' x1='0' y1='0' x2='1' y2='1'>
+      <stop offset='0%' stop-color='${a}'/><stop offset='100%' stop-color='${b}'/></linearGradient></defs>
+    <rect width='100%' height='100%' fill='url(#g)'/>
+    <g opacity='.08'><circle cx='800' cy='450' r='230' fill='#fff'/></g>
+    <text x='50%' y='50%' dominant-baseline='middle' text-anchor='middle'
+          font-family='system-ui,Arial' font-size='46' fill='rgba(255,255,255,0.95)'>${label}</text>
+  </svg>`);
+    return `data:image/svg+xml;charset=utf-8,${svg}`;
+  }
+
+  /* ---------- Data ---------- */
+  const steps = [
+    {
+      id:'birth', type:'origin', title:'Birth • Burdwan, India',
+      subtitle:'Starting point of the journey.',
+      desc:'Burdwan (Bardhaman), West Bengal.',
+      lat:23.2324, lon:87.8615, radiusKm:10,
+      gallery:[ imgPlaceholder('Burdwan • early roots', '#0ea5e9','#1e3a8a'),
+                imgPlaceholder('Hometown memories', '#38bdf8','#0e7490') ]
+    },
+    {
+      id:'school', type:'origin', title:'School • Burdwan, India',
+      subtitle:'Early education.',
+      desc:'Formative years and first sparks of science.',
+      lat:23.2324, lon:87.8615, radiusKm:10,
+      gallery:[ imgPlaceholder('School years • curiosity', '#22c55e','#0f766e'),
+                imgPlaceholder('First circuits & demos', '#34d399','#065f46') ]
+    },
+    {
+      id:'nit', type:'study', title:'Undergrad • NIT Durgapur',
+      subtitle:'Electronics & Communication Engineering',
+      desc:'NIT Durgapur, West Bengal, India.',
+      lat:23.5505, lon:87.2910, radiusKm:12,
+      gallery:[ imgPlaceholder('NIT Durgapur campus', '#f59e0b','#b45309'),
+                imgPlaceholder('ECE • projects', '#fbbf24','#92400e') ]
+    },
+    {
+      id:'ub', type:'study', title:'MS & PhD • University at Buffalo',
+      subtitle:'Nanophotonics & Biosensing',
+      desc:'SUNY Buffalo, New York, USA.',
+      lat:42.9990, lon:-78.7800, radiusKm:20,
+      gallery:[ imgPlaceholder('Buffalo • research', '#8b5cf6','#4c1d95'),
+                imgPlaceholder('Cleanroom & optics', '#a78bfa','#4338ca') ]
+    },
+    {
+      id:'boston', type:'work', title:'Internship • Boston, USA',
+      subtitle:'Summer at a meta‑optics company',
+      desc:'Hands‑on SEM & process analysis.',
+      lat:42.3601, lon:-71.0589, radiusKm:18,
+      gallery:[ imgPlaceholder('Boston • summer stint', '#ef4444','#7f1d1d'),
+                imgPlaceholder('Labs & city', '#fb7185','#7f1d1d') ]
+    }
+  ];
+  const typeColor = t => t==='origin' ? '#14b8a6' : t==='study' ? '#60a5fa' : '#f59e0b';
+
+  /* ---------- Map ---------- */
+  if (!window.L) {
+    alert('Leaflet failed to load. Check network or CDN.');
+    return;
+  }
+
+  const map = L.map('map', {
+    worldCopyJump:true, zoomControl:false, minZoom:2, maxZoom:18,
+    center:[20,78], zoom:4, preferCanvas:true, zoomAnimation:true, inertia:true
+  });
+  L.control.zoom({ position:'bottomright' }).addTo(map);
+
+  // Satellite tiles (Esri). If your network blocks this, switch to OSM below.
+  L.tileLayer(
+    'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
+    { attribution:'Tiles © Esri — Source: Esri, Maxar, Earthstar Geographics', crossOrigin:true }
+  ).addTo(map);
+
+  // Fallback (uncomment to test quickly)
+  // L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+  //   { attribution:'© OpenStreetMap contributors' }).addTo(map);
+
+  /* ---------- Pins + hover/click gallery ---------- */
+  const pinLayer = L.layerGroup().addTo(map);
+  steps.forEach(s=>{
+    const icon = L.divIcon({
+      className:'pin',
+      html:`<div style="width:16px;height:16px;border-radius:50%;background:${typeColor(s.type)};
+                     border:2px solid #0b1020;box-shadow:0 0 0 2px rgba(255,255,255,.18)"></div>`,
+      iconSize:[16,16], iconAnchor:[8,8]
+    });
+    const m = L.marker([s.lat, s.lon], { icon }).addTo(pinLayer);
+
+    let hoverTimer=null;
+    m.on('mouseover', (e)=>{ hoverTimer=setTimeout(()=>openGallery(s,e.latlng), 120); });
+    m.on('mouseout', ()=>{ if(hoverTimer){clearTimeout(hoverTimer); hoverTimer=null;} });
+    m.on('click', ()=> focusCity(s));
+  });
+
+  /* ---------- UI refs ---------- */
+  const elTypeDot = document.getElementById('typeDot');
+  const elTitle   = document.getElementById('title');
+  const elSub     = document.getElementById('subtitle');
+  const elDesc    = document.getElementById('desc');
+  const btnPrev   = document.getElementById('prev');
+  const btnNext   = document.getElementById('next');
+
+  function waitMoveOrTimeout(ms=2200){
+    return new Promise(resolve=>{
+      let done=false;
+      const finish=()=>{ if(!done){ done=true; map.off('moveend',finish); map.off('zoomend',finish); resolve(); } };
+      map.once('moveend', finish);
+      map.once('zoomend', finish);
+      setTimeout(finish, ms);
+    });
+  }
+
+  const OUT_ZOOM = 3.5;
+  const ZPAD = [60,60];
+  let animBusy=false;
+
+  async function focusCity(step){
+    if (animBusy) return;
+    animBusy = true;
+
+    // Update card text
+    elTypeDot.style.background = typeColor(step.type);
+    elTitle.textContent = step.title;
+    elSub.textContent   = step.subtitle;
+    elDesc.textContent  = step.desc;
+
+    const center = [step.lat, step.lon];
+
+    // 1) Zoom out (only if currently closer than OUT_ZOOM)
+    if (map.getZoom() > OUT_ZOOM + 0.05){
+      map.flyTo(map.getCenter(), OUT_ZOOM, {animate:true, duration:0.9});
+      await waitMoveOrTimeout();
+    }
+
+    // 2) Pan (fly) to new city at OUT_ZOOM
+    map.flyTo(center, OUT_ZOOM, {animate:true, duration:1.0});
+    await waitMoveOrTimeout();
+
+    // 3) Compute desired zoom to show the whole city radius
+    const circle = L.circle(center, { radius:(step.radiusKm||12)*1000 });
+    const bounds = circle.getBounds();
+    let targetZ = map.getBoundsZoom(bounds, true, ZPAD);
+    targetZ = Math.max(12, Math.min(15, targetZ)); // clamp
+
+    // 4) Zoom in to city
+    map.flyTo(center, targetZ, {animate:true, duration:1.2});
+    await waitMoveOrTimeout();
+
+    animBusy=false;
+  }
+
+  let idx = 0;
+  function setStep(i, opts={}){
+    idx = Math.max(0, Math.min(steps.length-1, i));
+    const s = steps[idx];
+
+    // Update text instantly
+    elTypeDot.style.background = typeColor(s.type);
+    elTitle.textContent = s.title;
+    elSub.textContent   = s.subtitle;
+    elDesc.textContent  = s.desc;
+
+    btnPrev.disabled = idx===0;
+    btnNext.disabled = idx===steps.length-1;
+
+    if (opts.instant){
+      // First load: go directly to city view without pre-zoom-out
+      const circle = L.circle([s.lat, s.lon], { radius:(s.radiusKm||12)*1000 });
+      const bounds = circle.getBounds();
+      const z = Math.max(12, Math.min(15, map.getBoundsZoom(bounds, true, ZPAD)));
+      map.setView([s.lat, s.lon], z, {animate:false});
+    } else {
+      focusCity(s);
+    }
+  }
+
+  btnPrev.onclick = ()=> setStep(idx-1);
+  btnNext.onclick = ()=> setStep(idx+1);
+
+  // Initial view
+  setStep(0, {instant:true});
+
+  /* ---------- Large gallery ---------- */
+  const gallery = document.getElementById('gallery');
+  const gTitle  = document.getElementById('gTitle');
+  const gCaption= document.getElementById('gCaption');
+  const gViewport=document.getElementById('gViewport');
+  const gPrev   = document.getElementById('gPrev');
+  const gNext   = document.getElementById('gNext');
+  const gClose  = document.getElementById('gClose');
+
+  let gImgs = [], gIndex = 0;
+
+  function openGallery(step, latlng){
+    const p = map.latLngToContainerPoint(latlng || L.latLng(step.lat, step.lon));
+    const W = Math.min(960, window.innerWidth*0.96);
+    const H = Math.min(560, window.innerHeight*0.60);
+    gallery.style.width = W+'px';
+    gallery.style.left = Math.min(Math.max(12, p.x - W/2), window.innerWidth - W - 12) + 'px';
+    gallery.style.top  = Math.min(Math.max(12, p.y - H - 24), window.innerHeight - H - 24) + 'px';
+
+    gTitle.textContent = step.title;
+    gImgs = step.gallery.slice();
+    gIndex = 0;
+
+    // rebuild slides
+    gViewport.querySelectorAll('img.galleryImg').forEach(n=>n.remove());
+    gImgs.forEach((src, i)=>{
+      const im = document.createElement('img');
+      im.className = 'galleryImg' + (i===0 ? ' active':'');
+      im.src = src;                         // replace later with real files
+      im.alt = step.title + ' • ' + (i+1);
+      gViewport.appendChild(im);
+    });
+    updateCaption(step);
+    gallery.style.display='block';
+  }
+  function updateCaption(step){
+    gCaption.textContent = step.subtitle + (gImgs.length>1 ? `  •  ${gIndex+1}/${gImgs.length}`:'');
+    const all = [...gViewport.querySelectorAll('img.galleryImg')];
+    all.forEach((im, i)=> im.classList.toggle('active', i===gIndex));
+  }
+  gPrev.onclick = ()=>{ if (!gImgs.length) return; gIndex=(gIndex-1+gImgs.length)%gImgs.length; updateCaption(steps[idx]); };
+  gNext.onclick = ()=>{ if (!gImgs.length) return; gIndex=(gIndex+1)%gImgs.length; updateCaption(steps[idx]); };
+  gClose.onclick= ()=>{ gallery.style.display='none'; };
+
+  console.log('✅ Timeline ready');
+});
+</script>
+</body>
+</html>
