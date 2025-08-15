@@ -148,50 +148,64 @@ function makePlane(color=0xf59e0b){
 }
 
 // Steps
-const steps=[
+const steps = [
   {
-    key:"birth",
-    headline:"Birth • Burdwan, India",
-    copy:"Starting point of the journey.",
-    tags:["Origin","West Bengal"],
-    focus:{lat:23.2324,lng:87.8615,dist:2.6,tilt:.25},
-    pins:[{lat:23.2324,lng:87.8615,type:"home",label:"Burdwan"}]
+    key: "birth",
+    headline: "Birth • Burdwan, India",
+    copy: "Born in Burdwan, West Bengal, India.",
+    tags: ["Personal", "Origin"],
+    focus: { lat: 23.2324, lng: 87.8615, dist: 2.3, tilt: 0.2 },
+    pins: [{ lat: 23.2324, lng: 87.8615, type: "personal", label: "Burdwan" }]
   },
   {
-    key:"school",
-    headline:"Schooling • Burdwan",
-    copy:"Formative years and early curiosity for science.",
-    tags:["Schooling","Foundation"],
-    focus:{lat:23.2324,lng:87.8615,dist:2.2,tilt:.15},
-    pins:[{lat:23.2324,lng:87.8615,type:"home",label:"Burdwan"}]
+    key: "school",
+    headline: "Schooling • Burdwan, India",
+    copy: "Completed primary and secondary schooling in Burdwan, excelling in science and mathematics.",
+    tags: ["School", "Education"],
+    focus: { lat: 23.2324, lng: 87.8615, dist: 2.3, tilt: 0.2 },
+    pins: [{ lat: 23.2324, lng: 87.8615, type: "study", label: "Burdwan" }]
   },
   {
-    key:"undergrad",
-    headline:"Undergraduate • NIT Durgapur",
-    copy:"Electronics and Communication Engineering at NIT Durgapur.",
-    tags:["NIT Durgapur","ECE","India"],
-    focus:{lat:23.5204,lng:87.3119,dist:2.1,tilt:.15},
-    pins:[{lat:23.5204,lng:87.3119,type:"study",label:"NIT Durgapur"}]
+    key: "undergrad",
+    headline: "Undergraduate Studies • NIT Durgapur",
+    copy: "Pursued Electronics and Communication Engineering at the National Institute of Technology, Durgapur.",
+    tags: ["NIT", "ECE", "Undergraduate"],
+    focus: { lat: 23.5505, lng: 87.2915, dist: 2.3, tilt: 0.2 },
+    pins: [{ lat: 23.5505, lng: 87.2915, type: "study", label: "NIT Durgapur" }],
+    action: {
+      type: "flight",
+      from: { lat: 23.2324, lng: 87.8615, label: "Burdwan" },
+      to: { lat: 23.5505, lng: 87.2915, label: "NIT Durgapur" }
+    }
   },
   {
-    key:"grad",
-    headline:"Graduate Studies • University at Buffalo",
-    copy:"Masters and PhD in Electrical Engineering at UB, Buffalo, USA.",
-    tags:["UB","Masters","PhD","USA"],
-    focus:{lat:42.8864,lng:-78.8784,dist:2.3,tilt:.2},
-    pins:[{lat:42.8864,lng:-78.8784,type:"study",label:"Buffalo"}],
-    action:{type:"flight",from:{lat:22.5726,lng:88.3639,label:"Kolkata"},to:{lat:42.8864,lng:-78.8784,label:"Buffalo"}]
+    key: "grad",
+    headline: "Graduate Studies • University at Buffalo",
+    copy: "Masters and PhD in Electrical Engineering at the University at Buffalo, specializing in nanophotonics and biosensing.",
+    tags: ["UB", "Masters", "PhD", "USA"],
+    focus: { lat: 42.8864, lng: -78.8784, dist: 2.3, tilt: 0.2 },
+    pins: [{ lat: 42.8864, lng: -78.8784, type: "study", label: "Buffalo" }],
+    action: {
+      type: "flight",
+      from: { lat: 22.5726, lng: 88.3639, label: "Kolkata" },
+      to: { lat: 42.8864, lng: -78.8784, label: "Buffalo" }
+    }
   },
   {
-    key:"intern",
-    headline:"Internship • Boston, USA",
-    copy:"Nanofabrication and SEM experience in Boston.",
-    tags:["Internship","Nanofab","SEM"],
-    focus:{lat:42.3601,lng:-71.0589,dist:2.1,tilt:.2},
-    pins:[{lat:42.3601,lng:-71.0589,type:"work",label:"Boston"}],
-    action:{type:"flight",from:{lat:42.8864,lng:-78.8784,label:"Buffalo"},to:{lat:42.3601,lng:-71.0589,label:"Boston"}]
+    key: "internship",
+    headline: "Internship • Boston, USA",
+    copy: "Summer internship at Metalenz, Boston, focusing on advanced SEM-based process analysis for meta-optic devices.",
+    tags: ["Internship", "Boston", "Metalenz"],
+    focus: { lat: 42.3601, lng: -71.0589, dist: 2.3, tilt: 0.2 },
+    pins: [{ lat: 42.3601, lng: -71.0589, type: "work", label: "Boston" }],
+    action: {
+      type: "flight",
+      from: { lat: 42.8864, lng: -78.8784, label: "Buffalo" },
+      to: { lat: 42.3601, lng: -71.0589, label: "Boston" }
+    }
   }
 ];
+
 
 // UI refs
 const headlineEl=document.getElementById('headline');
