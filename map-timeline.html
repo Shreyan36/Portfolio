@@ -12,12 +12,13 @@
 <style>
   :root{
     --bg:#0b1020; --panel:#0f162b; --text:#e5e7eb; --muted:#a8b3cf;
-    --origin:#14b8a6; --study:#60a5fa; --work:#f59e0b; --path:#8b5cf6; --btn:#1b2442;
+    --origin:#14b8a6; --study:#60a5fa; --work:#f59e0b; --btn:#1b2442;
   }
   *{box-sizing:border-box}
   html,body{height:100%;margin:0;background:var(--bg);color:var(--text);
     font:14px/1.45 system-ui,-apple-system,Segoe UI,Roboto,Inter,Arial}
   #map{position:fixed; inset:0}
+  .leaflet-container{background:#0a0f1e}
 
   /* Legend */
   .legend{position:fixed; top:12px; right:12px; z-index:5000; display:flex; gap:12px;
@@ -209,16 +210,18 @@ const map = L.map('map', {
   center: [20, 78], zoom: 4,
   preferCanvas: true,
   zoomAnimation: true,
+  zoomAnimationThreshold: 1,
+  fadeAnimation: true,
   inertia: true
 });
 
-const tiles = L.tileLayer(
+L.tileLayer(
   'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
   {
     attribution: 'Tiles © Esri — Source: Esri, Maxar, Earthstar Geographics',
     updateWhenZooming: false,
     updateWhenIdle: true,
-    keepBuffer: 5,
+    keepBuffer: 6,
     crossOrigin: true
   }
 ).addTo(map);
@@ -245,13 +248,24 @@ steps.forEach(s=>{
   markers.push(m);
 });
 
-/* --------------------- City focus: zoom out -> translate -> zoom in --------------------- */
-const OUT_ZOOM = 3.5;       // how far out before flying to next city
+/* --------------------- Robust event helper (with timeout fallback) --------------------- */
+function onceWithTimeout(target, ev, ms, onTimeout){
+  return new Promise(resolve=>{
+    let done=false, t=null;
+    const off=()=>{ if(done) return; done=true; target.off(ev, handler); if(t) clearTimeout(t); };
+    const handler=()=>{ off(); resolve('event'); };
+    target.on(ev, handler);
+    t=setTimeout(()=>{ off(); onTimeout && onTimeout(); resolve('timeout'); }, ms);
+  });
+}
+
+/* --------------------- City focus flow: zoom out -> translate -> zoom in --------------------- */
+const OUT_ZOOM = 3.5;
 const OUT_DURATION = 1.0;   // seconds
 const IN_DURATION  = 1.4;   // seconds
 let animBusy = false;
 
-function focusCity(step){
+async function focusCity(step){
   if (animBusy) return;
   animBusy = true;
 
@@ -262,37 +276,35 @@ function focusCity(step){
   desc.textContent = step.desc;
 
   const center = L.latLng(step.lat, step.lon);
-
-  // 1) Zoom out a bit from wherever we are (only if we're pretty zoomed in)
   const currentZoom = map.getZoom();
-  const doZoomOut = currentZoom > OUT_ZOOM + 0.1;
+  const needZoomOut = currentZoom > OUT_ZOOM + 0.1;
 
-  const afterOut = ()=>{
-    // 2) Glide (translate) to the new city at OUT_ZOOM
-    map.once('moveend', ()=>{
-      // 3) Fit a bounding circle so the whole city area is visible
-      fitCity(step).then(()=> animBusy = false);
-    });
-    map.flyTo(center, OUT_ZOOM, { duration: OUT_DURATION, animate:true });
-  };
-
-  if (doZoomOut){
-    map.once('zoomend', afterOut);
+  // 1) Zoom out (if needed)
+  if (needZoomOut){
     map.flyTo(map.getCenter(), OUT_ZOOM, { duration: OUT_DURATION, animate:true });
-  } else {
-    afterOut();
+    await onceWithTimeout(map, 'zoomend', (OUT_DURATION*1000)+600);
   }
+
+  // 2) Pan to new city at OUT_ZOOM
+  map.flyTo(center, OUT_ZOOM, { duration: OUT_DURATION, animate:true });
+  await onceWithTimeout(map, 'moveend', (OUT_DURATION*1000)+600);
+
+  // 3) Fit a bounding circle so the whole city area is visible
+  await fitCity(step);
+
+  animBusy = false;
 }
 
 // Fit a circle around the city; returns a Promise that resolves after zoom-in finishes
 function fitCity(step){
-  return new Promise(resolve=>{
+  return new Promise(async resolve=>{
     const {lat, lon, radiusKm=12} = step;
     const circle = L.circle([lat, lon], { radius: radiusKm*1000 });
     const b = circle.getBounds();
 
-    map.once('moveend', ()=> resolve());
     map.flyToBounds(b, { padding:[60,60], maxZoom: 13, duration: IN_DURATION, animate:true });
+    await onceWithTimeout(map, 'moveend', (IN_DURATION*1000)+600);
+    resolve();
   });
 }
 
@@ -306,9 +318,8 @@ const btnNext = document.getElementById('next');
 
 let idx = 0;
 
-// Make sure tiles are present before first fit (prevents _map undefined / white tiles)
-tiles.once('load', () => {
-  setStep(0, {instant:true});
+map.whenReady(()=>{
+  setStep(0, {instant:true}); // first load = direct fit
 });
 
 btnPrev.onclick = ()=> setStep(idx-1);
