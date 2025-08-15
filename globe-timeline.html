@@ -1,274 +1,406 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <meta
-    name="viewport"
-    content="width=device-width,initial-scale=1,maximum-scale=1"
-  />
-  <title>Shreyan • Globe Timeline</title>
-  <style>
-    :root {
-      --bg: #0b0f16;
-      --panel: #0f1420;
-      --text: #e7ebf2;
-      --muted: #a5acc1;
-      --brand: #7c4dff;
-    }
-    html, body { height: 100%; margin: 0; }
-    body { background: radial-gradient(1000px 400px at 50% -200px, #141a25 0%, var(--bg) 55%); color: var(--text); font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif; }
-    #app { position: relative; height: 100dvh; overflow: hidden; }
-
-    /* Bottom timeline card */
-    .card {
-      position: absolute; left: 16px; bottom: 16px;
-      background: rgba(15,20,32,.9); border: 1px solid rgba(255,255,255,.06);
-      padding: 16px; border-radius: 12px; width: min(460px, calc(100% - 32px));
-      box-shadow: 0 8px 30px rgba(0,0,0,.35); backdrop-filter: blur(6px);
-    }
-    .title { font-weight: 700; margin: 0 0 4px 0; font-size: 16px; }
-    .subtitle { margin: 0 0 10px 0; color: var(--muted); font-size: 13px; }
-    .btns { display: flex; gap: 8px; justify-content:flex-end; }
-    .btn {
-      border: 1px solid rgba(255,255,255,.08); background: #171d2a; color: var(--text);
-      padding: 8px 12px; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 13px;
-    }
-    .btn.primary { background: var(--brand); border-color: transparent; color: white; }
-
-    /* Hover card for markers */
-    .hover-card {
-      position: absolute; pointer-events: none; opacity: 0; transform: translate(-50%, calc(-100% - 14px));
-      background: rgba(17,23,36,.92); border: 1px solid rgba(255,255,255,.08); border-radius: 12px;
-      width: 260px; box-shadow: 0 10px 30px rgba(0,0,0,.35); transition: opacity .15s ease;
-    }
-    .hover-card.visible { opacity: 1; }
-    .hover-card img { width: 100%; height: 150px; object-fit: cover; border-radius: 12px 12px 0 0; display: block; }
-    .hover-card .meta { padding: 10px 12px; }
-    .legend {
-      position: absolute; top: 12px; right: 12px; display: flex; gap: 10px; background: rgba(17,23,36,.7);
-      border: 1px solid rgba(255,255,255,.06); padding: 8px 10px; border-radius: 999px; font-size: 12px; backdrop-filter: blur(6px);
-    }
-    .dot { width: 8px; height: 8px; border-radius: 999px; display: inline-block; margin-right: 6px; transform: translateY(-1px); }
-  </style>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Shreyan • Globe Timeline</title>
+<style>
+  :root{
+    --bg:#0b1020; --panel:#0f162b; --panel-2:#0c1426;
+    --ring:#3b82f6; --text:#e5e7eb; --muted:#9aa4c7; --accent:#8b5cf6;
+    --origin:#14b8a6; --study:#60a5fa; --work:#f59e0b; --flight:#8b5cf6;
+  }
+  *{box-sizing:border-box} html,body{height:100%;margin:0;background:radial-gradient(1200px 600px at 50% -10%, #17203d 0%, var(--bg) 45%, #070a14 100%); color:var(--text); font:14px/1.4 system-ui, -apple-system, Segoe UI, Roboto, "Inter", Arial}
+  #gl {position:fixed; inset:0; z-index:1; pointer-events:none}
+  .ui{position:relative; z-index:10}
+  .legend{position:fixed; top:12px; right:12px; display:flex; gap:14px; background:rgba(15,22,43,.6); border:1px solid rgba(255,255,255,.06); padding:8px 12px; border-radius:14px; backdrop-filter: blur(8px)}
+  .lg-badge{display:flex; align-items:center; gap:6px; color:var(--muted)}
+  .dot{width:8px; height:8px; border-radius:50%}
+  .card{position:fixed; left:16px; bottom:16px; width:min(560px, calc(100% - 32px)); background:rgba(15,22,43,.85);
+        border:1px solid rgba(255,255,255,.06); border-radius:16px; padding:16px; backdrop-filter: blur(8px)}
+  .h{font-weight:700; margin:0 0 4px}
+  .t{color:#c9d4ff; margin:0 0 8px}
+  .d{color:var(--muted)}
+  .row{display:flex; align-items:center; gap:8px; margin-bottom:10px}
+  .controls{display:flex; gap:10px; margin-top:10px}
+  .btn{background:#1b2442; color:#dfe6ff; border:1px solid rgba(255,255,255,.08); padding:8px 14px; border-radius:12px; cursor:pointer}
+  .btn:disabled{opacity:.5; cursor:not-allowed}
+  .btn.primary{background:linear-gradient(135deg,#6d28d9,#8b5cf6); border:0}
+  .hover-card{position:fixed; transform:translate(-50%,-120%); pointer-events:none; display:none;
+              width:220px; background:rgba(15,22,43,.92); border:1px solid rgba(255,255,255,.08); border-radius:12px; overflow:hidden; box-shadow:0 10px 30px rgba(0,0,0,.5)}
+  .hover-card img{display:block; width:100%; height:140px; object-fit:cover}
+  .hover-card .hc-txt{padding:8px 10px; color:#cbd5e1}
+  /* Pin label (screen space) */
+  .pin-label{position:absolute; padding:2px 6px; font-size:12px; border-radius:8px; background:rgba(0,0,0,.45); border:1px solid rgba(255,255,255,.08); color:#e5e7eb; transform:translate(-50%,-140%); white-space:nowrap; display:none}
+</style>
 </head>
-
 <body>
-  <div id="app">
-    <div class="legend">
-      <span><span class="dot" style="background:#36d399"></span>Origin</span>
-      <span><span class="dot" style="background:#60a5fa"></span>Study</span>
-      <span><span class="dot" style="background:#f59e0b"></span>Work</span>
-      <span><span class="dot" style="background:#a78bfa"></span>Flight Path</span>
-    </div>
+<canvas id="gl"></canvas>
 
-    <div id="hoverCard" class="hover-card">
-      <img id="hoverImg" src="" alt="">
-      <div class="meta">
-        <div id="hoverTitle" style="font-weight:700; margin-bottom:4px;"></div>
-        <div id="hoverDesc" style="font-size:12px; color:#aab1c6;"></div>
-      </div>
-    </div>
+<!-- hover preview -->
+<div id="hover" class="hover-card">
+  <img id="hoverImg" alt="">
+  <div class="hc-txt" id="hoverTxt"></div>
+</div>
 
-    <div class="card">
-      <div class="title" id="stepTitle">Birth • Burdwan, India</div>
-      <div class="subtitle" id="stepDesc">Starting point of the journey.</div>
-      <div class="btns">
-        <button id="prev" class="btn">Prev</button>
-        <button id="next" class="btn primary">Next</button>
-      </div>
-    </div>
+<!-- pin labels container -->
+<div id="labels" class="ui"></div>
+
+<!-- Legend + bottom card -->
+<div class="ui legend">
+  <div class="lg-badge"><span class="dot" style="background:var(--origin)"></span>Origin</div>
+  <div class="lg-badge"><span class="dot" style="background:var(--study)"></span>Study</div>
+  <div class="lg-badge"><span class="dot" style="background:var(--work)"></span>Work</div>
+  <div class="lg-badge"><span class="dot" style="background:var(--flight)"></span>Flight Path</div>
+</div>
+
+<div class="ui card">
+  <div class="row">
+    <div class="dot" id="typeDot" style="background:var(--origin)"></div>
+    <div class="h" id="title">Birth • Burdwan, India</div>
   </div>
+  <div class="t" id="subtitle">Starting point of the journey.</div>
+  <div class="d" id="desc">Use Next to follow the path.</div>
+  <div class="controls">
+    <button id="prev" class="btn">Prev</button>
+    <button id="next" class="btn primary">Next</button>
+  </div>
+</div>
 
-  <!-- Globe code -->
- <script type="module">
-/* --------- Robust Three.js + OrbitControls imports (ESM, safe for GH Pages) --------- */
+<script type="module">
+/* -------------------------------------------
+   Imports (ES Modules) – safe for GH Pages
+--------------------------------------------*/
 import * as THREE from 'https://unpkg.com/three@0.159.0/build/three.module.js';
 import { OrbitControls } from 'https://unpkg.com/three@0.159.0/examples/jsm/controls/OrbitControls.js';
 
-/* ---------------------- DOM targets & basic layout ---------------------- */
-const container = document.getElementById('globe-container') || (() => {
-  const c = document.createElement('div');
-  c.id = 'globe-container';
-  c.style.position = 'fixed';
-  c.style.inset = '0';
-  c.style.zIndex = '0';   // your UI sits above this
-  document.body.appendChild(c);
-  return c;
-})();
-container.innerHTML = ''; // clear if reloaded
+/* -------------------------------------------
+   Data (you can edit freely)
+--------------------------------------------*/
+const steps = [
+  {
+    id:'birth', type:'origin', title:'Birth • Burdwan, India',
+    subtitle:'Starting point of the journey.',
+    desc:'Burdwan (Bardhaman), West Bengal.',
+    lat:23.2324, lon:87.8615,
+    preview: sampleImage(1)
+  },
+  {
+    id:'school', type:'origin', title:'School • Burdwan, India',
+    subtitle:'Early education.',
+    desc:'Formative years and first sparks of science.',
+    lat:23.2324, lon:87.8615,
+    preview: sampleImage(2)
+  },
+  {
+    id:'nit', type:'study', title:'Undergrad • NIT Durgapur',
+    subtitle:'Electronics & Communication Engineering',
+    desc:'NIT Durgapur, West Bengal, India.',
+    lat:23.5505, lon:87.291, preview: sampleImage(3)
+  },
+  {
+    id:'ub', type:'study', title:'MS & PhD • University at Buffalo',
+    subtitle:'Nanophotonics & Biosensing',
+    desc:'SUNY Buffalo, New York, USA.',
+    lat:42.999, lon:-78.78, preview: sampleImage(4)
+  },
+  {
+    id:'boston', type:'work', title:'Internship • Boston, USA',
+    subtitle:'Summer at a meta-optics company',
+    desc:'Hands-on SEM imaging and process analysis.',
+    lat:42.3601, lon:-71.0589, preview: sampleImage(5)
+  }
+];
 
-/* ---------------------- Self-hosted assets (repo root) ---------------------- */
-const EARTH_COLOR_URL  = './earth-color.jpg';
-const EARTH_NORMAL_URL = './earth-normal.jpg';
-const IMG = {
-  burdwan: './burdwan.jpg',
-  nit: './nit.jpg',
-  buffalo: './buffalo.jpg',
-  boston: './boston.jpg'
+const colors = {
+  origin: new THREE.Color('#14b8a6'),
+  study:  new THREE.Color('#60a5fa'),
+  work:   new THREE.Color('#f59e0b'),
+  flight: new THREE.Color('#8b5cf6')
 };
 
-/* ---------------------- Basic Three.js scene ---------------------- */
-const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
-renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-renderer.setSize(window.innerWidth, window.innerHeight);
-container.appendChild(renderer.domElement);
+/* -------------------------------------------
+   Three.js basic scene
+--------------------------------------------*/
+const canvas = document.getElementById('gl');
+const renderer = new THREE.WebGLRenderer({ canvas, antialias:true, alpha:true });
+renderer.setPixelRatio(Math.min(devicePixelRatio,2));
+renderer.setSize(innerWidth, innerHeight, false);
 
 const scene = new THREE.Scene();
-const camera = new THREE.PerspectiveCamera(45, window.innerWidth/window.innerHeight, 0.1, 2000);
-camera.position.set(0, 0, 6);
-
+const camera = new THREE.PerspectiveCamera(45, innerWidth/innerHeight, 0.1, 2000);
+camera.position.set(0, 0, 7);
 const controls = new OrbitControls(camera, renderer.domElement);
-controls.enableDamping = true;
-controls.enablePan = false;
-controls.minDistance = 3;
-controls.maxDistance = 12;
+controls.enableDamping = true; controls.enablePan = false;
+controls.minDistance = 3; controls.maxDistance = 12;
 
 /* Lighting */
 scene.add(new THREE.AmbientLight(0xffffff, 0.8));
-const dir = new THREE.DirectionalLight(0xffffff, 0.8);
-dir.position.set(5, 3, 5);
-scene.add(dir);
+const sun = new THREE.DirectionalLight(0xffffff, 0.8);
+sun.position.set(5,3,5); scene.add(sun);
 
-/* ---------------------- Globe (with texture fallback) ---------------------- */
-const sphere = new THREE.Mesh(
-  new THREE.SphereGeometry(2, 128, 128),
-  new THREE.MeshStandardMaterial({ color: 0x223355, roughness: 0.8, metalness: 0.0 })
-);
-scene.add(sphere);
+/* -------------------------------------------
+   Earth (no external textures)
+   Shader = lat-long gradient + subtle noise
+--------------------------------------------*/
+const R = 2; // radius
+const earthGeo = new THREE.SphereGeometry(R, 160, 160);
+const earthMat = new THREE.ShaderMaterial({
+  uniforms:{
+    uTime:{value:0},
+    uColor1:{value:new THREE.Color('#203a6e')},
+    uColor2:{value:new THREE.Color('#0f1f43')},
+    uHighlight:{value:new THREE.Color('#89b4ff')}
+  },
+  vertexShader:`
+    varying vec3 vPos;
+    varying vec2 vUv;
+    void main(){
+      vPos = position;
+      vUv = uv;
+      gl_Position = projectionMatrix*modelViewMatrix*vec4(position,1.0);
+    }
+  `,
+  fragmentShader:`
+    varying vec3 vPos;
+    varying vec2 vUv;
+    uniform vec3 uColor1; uniform vec3 uColor2; uniform vec3 uHighlight;
+    float hash(vec2 p){ return fract(sin(dot(p, vec2(12.9898,78.233)))*43758.5453); }
+    void main(){
+      float lat = vUv.t; // 0..1
+      vec3 col = mix(uColor2, uColor1, smoothstep(0.1,0.9,lat));
+      // cheap dither + faint rim
+      float n = hash(vUv*800.0)*0.02;
+      float rim = smoothstep(0.0,0.25, 1.0 - abs(normalize(vPos).z));
+      col += uHighlight * rim * 0.08;
+      gl_FragColor = vec4(col + n, 1.0);
+    }
+  `
+});
+const earth = new THREE.Mesh(earthGeo, earthMat);
+scene.add(earth);
 
-const loader = new THREE.TextureLoader();
-
-function loadTexture(url) {
-  return new Promise((resolve, reject) => {
-    const tex = loader.load(
-      url,
-      () => resolve(tex),
-      undefined,
-      (err) => reject(err)
-    );
-  });
+/* -------------------------------------------
+   Helpers
+--------------------------------------------*/
+function latLonToVec3(lat, lon, radius=R){
+  const phi = THREE.MathUtils.degToRad(90 - lat);
+  const theta = THREE.MathUtils.degToRad(lon + 180);
+  const x = -radius * Math.sin(phi) * Math.cos(theta);
+  const z =  radius * Math.sin(phi) * Math.sin(theta);
+  const y =  radius * Math.cos(phi);
+  return new THREE.Vector3(x,y,z);
 }
 
-(async () => {
-  try {
-    console.log('Loading textures:', EARTH_COLOR_URL, EARTH_NORMAL_URL);
-    const [colorTex, normalTex] = await Promise.all([
-      loadTexture(EARTH_COLOR_URL),
-      loadTexture(EARTH_NORMAL_URL),
-    ]);
+function flyCameraTo(targetVec, distance=6, ms=1200){
+  const start = camera.position.clone();
+  const startTarget = controls.target.clone();
+  const dir = targetVec.clone().normalize();
+  const endPos = targetVec.clone().add(dir.multiplyScalar(distance));
+  const endTarget = targetVec.clone();
 
-    colorTex.colorSpace = THREE.SRGBColorSpace;
-    normalTex.wrapS = normalTex.wrapT = THREE.RepeatWrapping;
-
-    sphere.material.map = colorTex;
-    sphere.material.normalMap = normalTex;
-    sphere.material.roughness = 0.7;
-    sphere.material.needsUpdate = true;
-    console.log('✅ Textures applied');
-  } catch (e) {
-    console.warn('⚠️ Texture load failed, using fallback material. Check 404 in Network tab.', e);
+  const t0 = performance.now();
+  function step(t){
+    const k = Math.min(1, (t - t0)/ms);
+    const s = 0.5 - 0.5*Math.cos(Math.PI*k); // ease
+    camera.position.lerpVectors(start, endPos, s);
+    controls.target.lerpVectors(startTarget, endTarget, s);
+    if (k<1) requestAnimationFrame(step);
   }
-})();
-
-/* ---------------------- Pins + hover image cards ---------------------- */
-const pinMaterial = new THREE.MeshBasicMaterial({ color: 0x7c3aed }); // purple
-function lonLatToVector3(lon, lat, radius = 2.02) {
-  const phi = (90 - lat) * (Math.PI/180);
-  const theta = (lon + 180) * (Math.PI/180);
-  return new THREE.Vector3(
-    -radius * Math.sin(phi) * Math.cos(theta),
-     radius * Math.cos(phi),
-     radius * Math.sin(phi) * Math.sin(theta)
-  );
+  requestAnimationFrame(step);
 }
 
-// Your timeline points
-const POINTS = [
-  { key:'burdwan', label:'Birth • Burdwan, India', lon:87.855,  lat:23.232,   img:IMG.burdwan, type:'origin' },
-  { key:'nit',     label:'Undergrad • NIT Durgapur', lon:87.290,  lat:23.547,   img:IMG.nit,     type:'study'  },
-  { key:'buffalo', label:'Graduate • Buffalo, USA', lon:-78.878, lat:42.886,   img:IMG.buffalo, type:'study'  },
-  { key:'boston',  label:'Internship • Boston, USA', lon:-71.058, lat:42.360,   img:IMG.boston,  type:'work'   },
-];
+/* -------------------------------------------
+   Pins + labels + hover preview
+--------------------------------------------*/
+const pinGroup = new THREE.Group(); scene.add(pinGroup);
+const labelLayer = document.getElementById('labels');
 
-const pins = [];
-POINTS.forEach(p => {
-  const geom = new THREE.SphereGeometry(0.03, 16, 16);
-  const m = pinMaterial.clone();
-  if (p.type==='origin') m.color.set(0x14b8a6); // teal
-  if (p.type==='study')  m.color.set(0x60a5fa); // blue
-  if (p.type==='work')   m.color.set(0xf59e0b); // amber
-  const mesh = new THREE.Mesh(geom, m);
-  mesh.position.copy(lonLatToVector3(p.lon, p.lat));
-  mesh.userData = p;
-  scene.add(mesh);
-  pins.push(mesh);
+const pinGeo = new THREE.SphereGeometry(0.035, 12, 12);
+
+const pins = steps.map((s)=>{
+  const col = colors[s.type] || new THREE.Color('#ccc');
+  const mat = new THREE.MeshBasicMaterial({ color: col });
+  const p = new THREE.Mesh(pinGeo, mat);
+  const pos = latLonToVec3(s.lat, s.lon, R+0.02);
+  p.position.copy(pos);
+  p.userData.step = s;
+  pinGroup.add(p);
+
+  // label element
+  const el = document.createElement('div');
+  el.className = 'pin-label';
+  el.textContent = s.title.split('•')[0].trim();
+  labelLayer.appendChild(el);
+
+  return { obj:p, label:el };
 });
 
-/* Hover image card (follows mouse) */
-const hoverCard = document.createElement('div');
-hoverCard.style.position = 'fixed';
-hoverCard.style.pointerEvents = 'none';
-hoverCard.style.transform = 'translate(-50%, -110%)';
-hoverCard.style.borderRadius = '12px';
-hoverCard.style.overflow = 'hidden';
-hoverCard.style.boxShadow = '0 10px 30px rgba(0,0,0,.45)';
-hoverCard.style.display = 'none';
-hoverCard.innerHTML = `
-  <img id="hover-img" src="" style="width:240px;height:140px;object-fit:cover;display:block;" />
-  <div style="background:#0b1020;color:#cbd5e1;padding:8px 10px;font:600 12px/1 Inter,system-ui">.</div>`;
-document.body.appendChild(hoverCard);
-const hoverImg = hoverCard.querySelector('#hover-img');
-const hoverCaption = hoverCard.querySelector('div');
-
 const raycaster = new THREE.Raycaster();
-const mouse = new THREE.Vector2();
-
-function onPointerMove(e) {
+const mouse = new THREE.Vector2(-2,-2);
+addEventListener('mousemove', (e)=>{
   const rect = renderer.domElement.getBoundingClientRect();
   mouse.x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
   mouse.y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
+});
 
-  raycaster.setFromCamera(mouse, camera);
-  const hit = raycaster.intersectObjects(pins, true)[0];
-  if (hit) {
-    const p = hit.object.userData;
-    hoverImg.src = p.img;
-    hoverCaption.textContent = p.label;
-    hoverCard.style.left = e.clientX + 'px';
-    hoverCard.style.top  = e.clientY + 'px';
-    hoverCard.style.display = 'block';
+/* hover card */
+const hover = document.getElementById('hover');
+const hoverImg = document.getElementById('hoverImg');
+const hoverTxt = document.getElementById('hoverTxt');
+let hoveredPin = null;
+
+/* -------------------------------------------
+   Flight path between consecutive steps
+--------------------------------------------*/
+const flightGroup = new THREE.Group(); scene.add(flightGroup);
+let movingDot = null;
+function addFlightArc(aVec, bVec){
+  flightGroup.clear(); movingDot = null;
+
+  const mid = aVec.clone().add(bVec).normalize().multiplyScalar(R*1.5);
+  const curve = new THREE.CatmullRomCurve3([aVec, mid, bVec]);
+  const tube = new THREE.TubeGeometry(curve, 120, 0.01, 8, false);
+  const mat = new THREE.MeshBasicMaterial({ color: colors.flight, transparent:true, opacity:0.9 });
+  const mesh = new THREE.Mesh(tube, mat); flightGroup.add(mesh);
+
+  // moving dot
+  const dot = new THREE.Mesh(new THREE.SphereGeometry(0.04, 12, 12),
+                             new THREE.MeshBasicMaterial({color:0xffffff}));
+  flightGroup.add(dot);
+  movingDot = { dot, curve, t:0 };
+}
+
+/* -------------------------------------------
+   UI & sequencing
+--------------------------------------------*/
+const typeDot = document.getElementById('typeDot');
+const title = document.getElementById('title');
+const subtitle = document.getElementById('subtitle');
+const desc = document.getElementById('desc');
+const btnPrev = document.getElementById('prev');
+const btnNext = document.getElementById('next');
+
+let idx = 0;
+function setStep(i, animate=true){
+  idx = THREE.MathUtils.clamp(i, 0, steps.length-1);
+  const s = steps[idx];
+  typeDot.style.background = cssType(s.type);
+  title.textContent = s.title;
+  subtitle.textContent = s.subtitle;
+  desc.textContent = s.desc;
+
+  const v = latLonToVec3(s.lat, s.lon, R);
+  if (animate) flyCameraTo(v, 5.8, 1200); else { controls.target.copy(v); }
+
+  // flight arc from previous step if exists
+  if (idx > 0){
+    const a = latLonToVec3(steps[idx-1].lat, steps[idx-1].lon, R);
+    const b = v.clone();
+    addFlightArc(a, b);
   } else {
-    hoverCard.style.display = 'none';
+    flightGroup.clear(); movingDot = null;
   }
-}
-renderer.domElement.addEventListener('mousemove', onPointerMove);
 
-/* ---------------------- Animate ---------------------- */
-function resize() {
-  const w = window.innerWidth, h = window.innerHeight;
-  camera.aspect = w / h;
+  btnPrev.disabled = idx===0; btnNext.disabled = idx===steps.length-1;
+}
+
+btnPrev.onclick = ()=> setStep(idx-1);
+btnNext.onclick = ()=> setStep(idx+1);
+
+function cssType(t){
+  return t==='origin' ? 'var(--origin)' : t==='study' ? 'var(--study)' : 'var(--work)';
+}
+
+/* -------------------------------------------
+   Resize
+--------------------------------------------*/
+addEventListener('resize', ()=>{
+  camera.aspect = innerWidth/innerHeight;
   camera.updateProjectionMatrix();
-  renderer.setSize(w, h, false);
-}
-window.addEventListener('resize', resize);
+  renderer.setSize(innerWidth, innerHeight, false);
+});
 
-function tick() {
-  sphere.rotation.y += 0.0008; // slow auto-rotate
+/* -------------------------------------------
+   Animation loop
+--------------------------------------------*/
+function renderLabels(){
+  pins.forEach(({obj,label})=>{
+    const v = obj.position.clone().project(camera);
+    const x = (v.x * 0.5 + 0.5) * innerWidth;
+    const y = (-v.y * 0.5 + 0.5) * innerHeight;
+    label.style.left = x+'px';
+    label.style.top = y+'px';
+    // show labels only if facing camera
+    const facing = obj.position.clone().normalize().dot(camera.position.clone().normalize()) > -0.2;
+    label.style.display = facing ? 'block' : 'none';
+  });
+}
+
+function animate(t){
+  earth.rotation.y += 0.0008;
+  if (movingDot){
+    movingDot.t = (movingDot.t + 0.003) % 1;
+    const p = movingDot.curve.getPointAt(movingDot.t);
+    movingDot.dot.position.copy(p);
+  }
+
+  // raycast hover
+  raycaster.setFromCamera(mouse, camera);
+  const intersects = raycaster.intersectObjects(pinGroup.children);
+  if (intersects.length){
+    const obj = intersects[0].object;
+    const s = obj.userData.step;
+    if (hoveredPin !== obj){
+      hoveredPin = obj;
+      hoverImg.src = s.preview;
+      hoverTxt.textContent = s.title;
+      hover.style.display = 'block';
+    }
+    const sp = obj.position.clone().project(camera);
+    hover.style.left = (sp.x * 0.5 + 0.5) * innerWidth + 'px';
+    hover.style.top  = (-sp.y * 0.5 + 0.5) * innerHeight + 'px';
+  } else {
+    hoveredPin = null; hover.style.display = 'none';
+  }
+
   controls.update();
   renderer.render(scene, camera);
-  requestAnimationFrame(tick);
+  renderLabels();
+  requestAnimationFrame(animate);
 }
-resize();
-tick();
+setStep(0, false);
+requestAnimationFrame(animate);
 
-/* ---------------------- Small helpers for your bottom UI ---------------------- */
-// If you have Next/Prev buttons wired, you can program a camera flight here:
-window.flyTo = (lon, lat, altitude=6) => {
-  const target = lonLatToVector3(lon, lat, 2.2);
-  controls.target.lerp(target, 0.1);
-  camera.position.lerp(target.clone().setLength(altitude), 0.1);
-};
+/* -------------------------------------------
+   Sample inline images (replace later)
+--------------------------------------------*/
+function sampleImage(n){
+  // tiny gradient placeholders; replace with your own later:
+  const stops = [
+    ['#0ea5e9','#1e3a8a'],
+    ['#22c55e','#0f766e'],
+    ['#f59e0b','#b45309'],
+    ['#8b5cf6','#4c1d95'],
+    ['#ef4444','#7f1d1d'],
+  ];
+  const [a,b]=stops[(n-1)%stops.length];
+  // SVG data URL
+  const svg = encodeURIComponent(
+`<svg xmlns='http://www.w3.org/2000/svg' width='720' height='480'>
+  <defs><linearGradient id='g' x1='0' y1='0' x2='1' y2='1'>
+    <stop offset='0%' stop-color='${a}'/>
+    <stop offset='100%' stop-color='${b}'/>
+  </linearGradient></defs>
+  <rect width='100%' height='100%' fill='url(#g)'/>
+  <circle cx='360' cy='240' r='140' fill='rgba(255,255,255,0.08)'/>
+  <text x='50%' y='50%' dominant-baseline='middle' text-anchor='middle'
+        font-family='system-ui,Arial' font-size='28' fill='rgba(255,255,255,0.9)'>
+    Shreyan • Preview ${n}
+  </text>
+</svg>`);
+  return `data:image/svg+xml;charset=utf-8,${svg}`;
+}
 </script>
-
 </body>
 </html>
