@@ -86,7 +86,7 @@ const typeColor = t => t==='origin' ? '#14b8a6' : (t==='study' ? '#60a5fa' : '#f
 
 /* ---------------- Map: satellite tiles, no extra labels ---------------- */
 const map = L.map('map', {
-  center:[20,78], zoom:4, minZoom:2, maxZoom:18,
+  center:[20,78], zoom:4, minZoom:2, maxZoom:19,
   zoomControl:false, worldCopyJump:true, zoomAnimation:true, inertia:true
 });
 L.control.zoom({ position:'bottomright' }).addTo(map);
@@ -128,7 +128,7 @@ function goTo(newIndex){
   idx = Math.max(0, Math.min(steps.length-1, newIndex));
   const s = steps[idx];
   setHUD(s);
-  sequenceToCity(s).catch(()=>{}); // no crash on interrupt
+  sequenceToCity(s).catch(()=>{});
   prevBtn.disabled = idx===0;
   nextBtn.disabled = idx===steps.length-1;
 }
@@ -140,7 +140,7 @@ function setHUD(s){
 }
 
 /* ---------------- Animation: zoom‑out → fly → zoom‑in ---------------- */
-const OUT_ZOOM = 3.5, OUT_DUR = 0.9, IN_DUR = 1.4;
+const OUT_ZOOM = 3.5, OUT_DUR = 0.9, IN_DUR = 1.6;
 
 function once(target, event){
   return new Promise(resolve => target.once(event, resolve));
@@ -148,7 +148,7 @@ function once(target, event){
 async function sequenceToCity(s){
   map.stop(); // cancel any ongoing animation
 
-  // Step 1: zoom out a bit (only if we’re currently in close)
+  // Step 1: zoom out a bit (only if we’re currently close)
   if (map.getZoom() > OUT_ZOOM + 0.1){
     map.flyTo(map.getCenter(), OUT_ZOOM, {duration: OUT_DUR, animate:true});
     await once(map, 'zoomend');
@@ -158,15 +158,25 @@ async function sequenceToCity(s){
   map.flyTo([s.lat, s.lon], OUT_ZOOM, {duration: OUT_DUR, animate:true});
   await once(map, 'moveend');
 
-  // Step 3: fit a circle bounds around the city (nice “zoom‑into city” view)
+  // Step 3: force a proper city zoom
   await fitCity(s);
 }
 
+/* ---- FIXED city zoom: compute best zoom from bounds, then fly to center at that zoom ---- */
 function fitCity(s){
   return new Promise(resolve=>{
-    const circle = L.circle([s.lat, s.lon], {radius: (s.radiusKm||12)*1000});
-    const bounds = circle.getBounds();
-    map.flyToBounds(bounds, {padding:[60,60], maxZoom: 13, duration: IN_DUR, animate:true});
+    const circle  = L.circle([s.lat, s.lon], { radius: (s.radiusKm || 12) * 1000 });
+    const bounds  = circle.getBounds();
+    const padding = [60, 60];
+
+    // Ask Leaflet the zoom that would fit these bounds
+    let desired = map.getBoundsZoom(bounds, true, padding);
+
+    // Clamp to a nice “city level” range; tweak as desired
+    desired = Math.min(Math.max(desired, 12), 14);
+
+    // Now fly directly to the center at the computed zoom (ensures real zoom‑in)
+    map.flyTo([s.lat, s.lon], desired, { duration: IN_DUR, animate: true });
     map.once('moveend', resolve);
   });
 }
