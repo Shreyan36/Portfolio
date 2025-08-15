@@ -1,23 +1,22 @@
 <!doctype html>
 <html lang="en">
 <head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width,initial-scale=1" />
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
 <title>Shreyan • Map Timeline</title>
 
 <!-- Leaflet -->
-<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
 <style>
   :root{
     --bg:#0b1020; --panel:#0f162b; --text:#e5e7eb; --muted:#a8b3cf;
-    --origin:#14b8a6; --study:#60a5fa; --work:#f59e0b; --flight:#8b5cf6;
-    --accent:#8b5cf6; --btn:#1b2442;
+    --origin:#14b8a6; --study:#60a5fa; --work:#f59e0b; --flight:#8b5cf6; --btn:#1b2442;
   }
   *{box-sizing:border-box}
   html,body{height:100%;margin:0;background:var(--bg);color:var(--text);
-    font:14px/1.45 system-ui, -apple-system, "Segoe UI", Roboto, Inter, Arial}
+    font:14px/1.45 system-ui,-apple-system,Segoe UI,Roboto,Inter,Arial}
   #map{position:fixed; inset:0}
 
   /* Legend */
@@ -25,13 +24,13 @@
     background:rgba(15,22,43,.65); border:1px solid rgba(255,255,255,.08);
     padding:8px 12px; border-radius:14px; backdrop-filter:blur(8px)}
   .lg{display:flex; align-items:center; gap:6px; color:var(--muted)}
-  .dot{width:8px; height:8px; border-radius:50%}
+  .dot{width:10px; height:10px; border-radius:50%}
 
   /* Bottom card */
   .card{position:fixed;left:16px;bottom:16px;z-index:5000;width:min(560px,calc(100% - 32px));
         background:rgba(15,22,43,.85);border:1px solid rgba(255,255,255,.06);border-radius:16px;
         padding:16px;backdrop-filter:blur(8px)}
-  .row{display:flex;align-items:center;gap:8px;margin-bottom:6px}
+  .row{display:flex;align-items:center;gap:10px;margin-bottom:6px}
   .h{font-weight:700;margin:0}
   .t{color:#cfe0ff;margin:4px 0 8px}
   .d{color:var(--muted)}
@@ -41,7 +40,7 @@
   .btn.primary{background:linear-gradient(135deg,#6d28d9,#8b5cf6);border:0}
   .btn:disabled{opacity:.5;cursor:not-allowed}
 
-  /* Gallery popup (≈4x bigger than before) */
+  /* Gallery popup (large) */
   .gallery{position:fixed;z-index:6000;display:none;width:min(960px,96vw);
            background:rgba(15,22,43,.98);border:1px solid rgba(255,255,255,.1);
            border-radius:16px;overflow:hidden;box-shadow:0 18px 60px rgba(0,0,0,.55)}
@@ -56,6 +55,9 @@
           border:1px solid rgba(255,255,255,.2);color:#fff;border-radius:10px;padding:8px 10px;cursor:pointer}
   .navPrev{left:10px} .navNext{right:10px}
   .galleryCaption{padding:10px 14px;color:#dbe7ff;border-top:1px solid rgba(255,255,255,.08)}
+
+  /* Pin hover hint */
+  .leaflet-marker-icon.pin:hover{filter: drop-shadow(0 0 8px rgba(255,255,255,.5))}
 </style>
 </head>
 <body>
@@ -77,7 +79,7 @@
     <div id="title" class="h">Birth • Burdwan, India</div>
   </div>
   <div id="subtitle" class="t">Starting point of the journey.</div>
-  <div id="desc" class="d">Use Next to follow the path. Hover a pin to open gallery.</div>
+  <div id="desc" class="d">Use Next to follow the path. Hover or click a pin to open the gallery.</div>
   <div class="controls">
     <button id="prev" class="btn">Prev</button>
     <button id="next" class="btn primary">Next</button>
@@ -91,7 +93,6 @@
     <button class="galleryClose" id="gClose" aria-label="Close">×</button>
   </div>
   <div class="galleryViewport" id="gViewport">
-    <!-- images injected -->
     <button class="navBtn navPrev" id="gPrev" aria-label="Previous">‹</button>
     <button class="navBtn navNext" id="gNext" aria-label="Next">›</button>
   </div>
@@ -125,7 +126,7 @@ const steps = [
     id:'nit', type:'study', title:'Undergrad • NIT Durgapur',
     subtitle:'Electronics & Communication Engineering',
     desc:'NIT Durgapur, West Bengal, India.',
-    lat:23.5505, lon:87.291,
+    lat:23.5505, lon:87.2910,
     gallery:[
       sampleImage('NIT Durgapur campus', '#f59e0b','#b45309'),
       sampleImage('ECE • projects', '#fbbf24','#92400e')
@@ -135,7 +136,7 @@ const steps = [
     id:'ub', type:'study', title:'MS & PhD • University at Buffalo',
     subtitle:'Nanophotonics & Biosensing',
     desc:'SUNY Buffalo, New York, USA.',
-    lat:42.999, lon:-78.78,
+    lat:42.9990, lon:-78.7800,
     gallery:[
       sampleImage('Buffalo • research', '#8b5cf6','#4c1d95'),
       sampleImage('Cleanroom & optics', '#a78bfa','#4338ca')
@@ -143,8 +144,8 @@ const steps = [
   },
   {
     id:'boston', type:'work', title:'Internship • Boston, USA',
-    subtitle:'Summer at a meta-optics company',
-    desc:'Hands-on SEM imaging and process analysis.',
+    subtitle:'Summer at a meta‑optics company',
+    desc:'Hands-on SEM and process analysis.',
     lat:42.3601, lon:-71.0589,
     gallery:[
       sampleImage('Boston • summer stint', '#ef4444','#7f1d1d'),
@@ -152,30 +153,34 @@ const steps = [
     ]
   }
 ];
-
-const typeColor = (t)=> t==='origin' ? '#14b8a6' : t==='study' ? '#60a5fa' : '#f59e0b';
+const typeColor = t => t==='origin' ? '#14b8a6' : t==='study' ? '#60a5fa' : '#f59e0b';
 
 /* --------------------- Map (Satellite, no labels) --------------------- */
 const map = L.map('map', {
   worldCopyJump: true,
   zoomControl: false,
   minZoom: 2, maxZoom: 18,
-  center: [20, 78], zoom: 4
+  center: [20, 78], zoom: 4,
+  preferCanvas: true,
+  zoomAnimation: true,
+  inertia: true
 });
-
-// Esri WorldImagery (satellite imagery, practically no labels)
 L.tileLayer(
   'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
-  { attribution: 'Tiles © Esri — Source: Esri, Maxar, Earthstar Geographics, and the GIS User Community' }
+  {
+    attribution: 'Tiles © Esri — Source: Esri, Maxar, Earthstar Geographics',
+    updateWhenZooming: false,
+    updateWhenIdle: true,
+    keepBuffer: 5,
+    crossOrigin: true
+  }
 ).addTo(map);
-
 L.control.zoom({ position:'bottomright' }).addTo(map);
 
-/* --------------------- Pins + “hover to open gallery” --------------------- */
+/* --------------------- Pins + gallery trigger --------------------- */
 const pinLayer = L.layerGroup().addTo(map);
 const markers = [];
-
-steps.forEach((s)=>{
+steps.forEach(s=>{
   const icon = L.divIcon({
     className:'pin',
     html:`<div style="width:16px;height:16px;border-radius:50%;background:${typeColor(s.type)};border:2px solid #0b1020;box-shadow:0 0 0 2px rgba(255,255,255,.18)"></div>`,
@@ -184,55 +189,99 @@ steps.forEach((s)=>{
   const m = L.marker([s.lat, s.lon], { icon }).addTo(pinLayer);
   m.step = s;
 
-  // Open big gallery on hover (with slight delay to avoid accidental opens)
   let hoverTimer=null;
-  m.on('mouseover', (e)=>{
-    hoverTimer = setTimeout(()=> openGallery(s, e.latlng), 120);
-  });
-  m.on('mouseout', ()=>{
-    if (hoverTimer){ clearTimeout(hoverTimer); hoverTimer=null; }
-    // don't close immediately; gallery has its own close button
-  });
+  m.on('mouseover', (e)=>{ hoverTimer=setTimeout(()=>openGallery(s,e.latlng), 120); });
+  m.on('mouseout', ()=>{ if(hoverTimer){clearTimeout(hoverTimer); hoverTimer=null;} });
+  m.on('click', (e)=> openGallery(s, e.latlng));
 
   markers.push(m);
 });
 
-/* --------------------- Flight path + airplane (slower) --------------------- */
+/* --------------------- Flight path + airplane --------------------- */
 const flightLayer = L.layerGroup().addTo(map);
-let plane = null, anim=null;
+let plane = null, animId = null, legLine = null;
 
-function drawFlight(a, b){
-  flightLayer.clearLayers();
-  if (plane) { plane.remove(); plane=null; }
-  if (anim) { cancelAnimationFrame(anim); anim=null; }
+// Bigger plane with inner rotatable div
+const planeIcon = L.divIcon({
+  className: 'planeIcon',
+  html: `
+    <div class="rot" style="will-change: transform;">
+      <svg width="28" height="28" viewBox="0 0 24 24" fill="#fff"
+           style="filter: drop-shadow(0 0 6px rgba(255,255,255,.9))">
+        <path d="M2 12l8 2 8 8 2-2-8-8 2-8-2-2-8 8-2 2z"/>
+      </svg>
+    </div>
+  `,
+  iconSize: [28,28],
+  iconAnchor: [14,14]
+});
 
-  const pts = interpolateLatLngs(a, b, 240); // more points -> smoother & slower
-  const path = L.polyline(pts, { color:'#8b5cf6', weight:2, opacity:0.9 }).addTo(flightLayer);
+function interpolateLatLngs(a, b, n=400){
+  const lat1 = a.lat*Math.PI/180, lon1 = a.lng*Math.PI/180;
+  const lat2 = b.lat*Math.PI/180, lon2 = b.lng*Math.PI/180;
+  const d = 2*Math.asin(Math.sqrt(
+    Math.sin((lat2-lat1)/2)**2 + Math.cos(lat1)*Math.cos(lat2)*Math.sin((lon2-lon1)/2)**2
+  ));
+  if (d===0) return [a,b];
+  const res=[];
+  for (let i=0;i<=n;i++){
+    const f=i/n;
+    const A=Math.sin((1-f)*d)/Math.sin(d);
+    const B=Math.sin(f*d)/Math.sin(d);
+    const x=A*Math.cos(lat1)*Math.cos(lon1)+B*Math.cos(lat2)*Math.cos(lon2);
+    const y=A*Math.cos(lat1)*Math.sin(lon1)+B*Math.cos(lat2)*Math.sin(lon2);
+    const z=A*Math.sin(lat1)+B*Math.sin(lat2);
+    const lat=Math.atan2(z,Math.sqrt(x*x+y*y))*180/Math.PI;
+    const lon=Math.atan2(y,x)*180/Math.PI;
+    res.push(L.latLng(lat,lon));
+  }
+  return res;
+}
+function bearing(lat1, lon1, lat2, lon2){
+  const φ1=lat1*Math.PI/180, φ2=lat2*Math.PI/180, Δλ=(lon2-lon1)*Math.PI/180;
+  const y=Math.sin(Δλ)*Math.cos(φ2);
+  const x=Math.cos(φ1)*Math.sin(φ2)-Math.sin(φ1)*Math.cos(φ2)*Math.cos(Δλ);
+  return (Math.atan2(y,x)*180/Math.PI+360)%360;
+}
 
-  // Airplane icon (SVG)
-  const planeIcon = L.divIcon({
-    className:'plane',
-    html:`<svg width="20" height="20" viewBox="0 0 24 24" fill="#fff" style="filter:drop-shadow(0 0 6px rgba(255,255,255,.8))">
-            <path d="M2 12l8 2 8 8 2-2-8-8 2-8-2-2-8 8-2 2z"/>
-          </svg>`,
-    iconSize:[20,20], iconAnchor:[10,10]
-  });
-  plane = L.marker(pts[0], { icon: planeIcon, zIndexOffset:1000 }).addTo(flightLayer);
+function animateFlight(points, durationMs=10000){
+  if (animId) cancelAnimationFrame(animId);
+  if (!points || points.length<2) return;
 
-  let i = 0;
-  const step = ()=>{
-    i = (i + 1) % pts.length;
-    const curr = pts[i], prev = pts[(i-1+pts.length)%pts.length];
+  if (!plane) plane = L.marker(points[0], { icon: planeIcon, zIndexOffset: 10000 }).addTo(flightLayer);
+  else plane.setLatLng(points[0]);
+
+  const start = performance.now();
+  const step = (now)=>{
+    const t = Math.min(1, (now - start) / durationMs);
+    const i = Math.max(1, Math.floor(t*(points.length-1)));
+    const curr = points[i];
+    const prev = points[i-1] || points[0];
     plane.setLatLng(curr);
 
-    // compute bearing for rotation
-    const brg = bearing(prev.lat, prev.lng, curr.lat, curr.lng);
     if (plane._icon){
-      plane._icon.style.transform = `rotate(${brg}deg)`;
+      const rot = plane._icon.querySelector('.rot');
+      if (rot){
+        const brg = bearing(prev.lat, prev.lng, curr.lat, curr.lng);
+        rot.style.transform = `rotate(${brg}deg)`;
+      }
     }
-    anim = requestAnimationFrame(step);
+    if (t < 1) animId = requestAnimationFrame(step);
   };
-  anim = requestAnimationFrame(step);
+  animId = requestAnimationFrame(step);
+}
+
+function drawLeg(a, b){
+  flightLayer.clearLayers();
+  if (animId) cancelAnimationFrame(animId);
+
+  const pts = interpolateLatLngs(a, b, 400);
+  legLine = L.polyline(pts, { color:'#8b5cf6', weight:2, opacity:0.75 }).addTo(flightLayer);
+
+  // Fit once so imagery loads for the whole leg, then animate plane
+  map.fitBounds(legLine.getBounds(), { padding:[50,50], animate:true, duration:1.0 });
+
+  animateFlight(pts, 10000); // 10s per leg; adjust to taste
 }
 
 /* --------------------- Sequencing --------------------- */
@@ -256,12 +305,14 @@ function setStep(i){
   title.textContent = s.title;
   subtitle.textContent = s.subtitle;
   desc.textContent = s.desc;
-  const latlng = L.latLng(s.lat, s.lon);
-  map.flyTo(latlng, 6, { duration: 1.4 });
-  if (idx>0){
-    drawFlight(L.latLng(steps[idx-1].lat, steps[idx-1].lon), latlng);
-  } else {
+
+  if (idx === 0){
+    map.setView([s.lat, s.lon], 6, { animate:true });
     flightLayer.clearLayers();
+    if (animId) cancelAnimationFrame(animId);
+  } else {
+    const prev = steps[idx-1];
+    drawLeg(L.latLng(prev.lat, prev.lon), L.latLng(s.lat, s.lon));
   }
   btnPrev.disabled = idx===0;
   btnNext.disabled = idx===steps.length-1;
@@ -279,7 +330,7 @@ const gClose = document.getElementById('gClose');
 let gImgs = [], gIndex = 0;
 
 function openGallery(step, latlng){
-  // position gallery near top-left of the marker, but keep on-screen
+  // position gallery near marker; keep on-screen
   const p = map.latLngToContainerPoint(latlng);
   const W = Math.min(960, window.innerWidth*0.96);
   const H = Math.min(560, window.innerHeight*0.60);
@@ -287,7 +338,6 @@ function openGallery(step, latlng){
   gallery.style.left = Math.min(Math.max(12, p.x - W/2), window.innerWidth - W - 12) + 'px';
   gallery.style.top  = Math.min(Math.max(12, p.y - H - 24), window.innerHeight - H - 24) + 'px';
 
-  // build images
   gTitle.textContent = step.title;
   gImgs = step.gallery.slice();
   gIndex = 0;
@@ -296,7 +346,7 @@ function openGallery(step, latlng){
   gImgs.forEach((src, i)=>{
     const im = document.createElement('img');
     im.className = 'galleryImg' + (i===0 ? ' active':'');
-    im.src = src;
+    im.src = src;                  // replace with your real paths later
     im.alt = step.title + ' • ' + (i+1);
     gViewport.appendChild(im);
   });
@@ -310,49 +360,15 @@ function updateCaption(step){
   const all = [...gViewport.querySelectorAll('img.galleryImg')];
   all.forEach((im, i)=> im.classList.toggle('active', i===gIndex));
 }
-
 gPrev.onclick = ()=> { if (!gImgs.length) return; gIndex = (gIndex-1+gImgs.length)%gImgs.length; updateCaption(currentStep()); };
 gNext.onclick = ()=> { if (!gImgs.length) return; gIndex = (gIndex+1)%gImgs.length; updateCaption(currentStep()); };
 gClose.onclick = ()=> { gallery.style.display='none'; };
 
 function currentStep(){ return steps[idx]; }
 
-/* --------------------- Helpers --------------------- */
-function interpolateLatLngs(a, b, n=200){
-  const lat1 = a.lat * Math.PI/180, lon1 = a.lng * Math.PI/180;
-  const lat2 = b.lat * Math.PI/180, lon2 = b.lng * Math.PI/180;
-  const d = 2 * Math.asin(Math.sqrt(
-      Math.sin((lat2-lat1)/2)**2 + Math.cos(lat1)*Math.cos(lat2)*Math.sin((lon2-lon1)/2)**2
-  ));
-  if (d===0) return [a,b];
-  const res = [];
-  for (let i=0;i<=n;i++){
-    const f = i/n;
-    const A = Math.sin((1-f)*d)/Math.sin(d);
-    const B = Math.sin(f*d)/Math.sin(d);
-    const x = A*Math.cos(lat1)*Math.cos(lon1) + B*Math.cos(lat2)*Math.cos(lon2);
-    const y = A*Math.cos(lat1)*Math.sin(lon1) + B*Math.cos(lat2)*Math.sin(lon2);
-    const z = A*Math.sin(lat1)               + B*Math.sin(lat2);
-    const lat = Math.atan2(z, Math.sqrt(x*x + y*y));
-    const lon = Math.atan2(y, x);
-    res.push(L.latLng(lat*180/Math.PI, lon*180/Math.PI));
-  }
-  return res;
-}
-
-function bearing(lat1, lon1, lat2, lon2){
-  const φ1 = lat1*Math.PI/180, φ2 = lat2*Math.PI/180;
-  const Δλ = (lon2-lon1)*Math.PI/180;
-  const y = Math.sin(Δλ)*Math.cos(φ2);
-  const x = Math.cos(φ1)*Math.sin(φ2) - Math.sin(φ1)*Math.cos(φ2)*Math.cos(Δλ);
-  const θ = Math.atan2(y, x);
-  return (θ*180/Math.PI + 360) % 360;
-}
-
-/* Inline placeholder images: replace with real file paths later
-   Example:
-   steps[0].gallery = ["./images/burdwan-1.jpg","./images/burdwan-2.jpg"];
-*/
+/* --------------------- Inline placeholder images --------------------- */
+/* Replace these with real files later, e.g.:
+   steps[0].gallery = ["./images/burdwan-1.jpg","./images/burdwan-2.jpg"]; */
 function sampleImage(label, a,b){
   const svg = encodeURIComponent(
 `<svg xmlns='http://www.w3.org/2000/svg' width='1600' height='900'>
