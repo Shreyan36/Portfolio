@@ -4,47 +4,27 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>Shreyan • Globe Timeline</title>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
 <style>
-  :root{--indigo:#4f46e5;--purple:#7e22ce;--ink:#e5e7eb;--muted:#94a3b8;--glass:#0b1220;--accent:#22d3ee;--good:#10b981;--work:#f472b6;--flight:#f59e0b}
-  *{box-sizing:border-box} html,body{height:100%}
-  body{margin:0;font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Arial;color:var(--ink);
-    background:radial-gradient(1200px 800px at 70% 20%, #0f172a 0%, #0b0f17 55%, #06080d 100%);
-    overflow:hidden}
-  #scene{position:fixed; inset:0; z-index:0}
+  :root{--indigo:#4f46e5;--muted:#94a3b8}
+  *{box-sizing:border-box}html,body{height:100%}
+  body{margin:0;background:#0b0f17;color:#e5e7eb;font-family:system-ui,-apple-system,Inter,Segoe UI,Roboto,Arial;overflow:hidden}
+  #scene{position:fixed;inset:0;z-index:0}
   .panel{position:fixed;left:24px;bottom:24px;z-index:2;width:min(620px,calc(100% - 48px));
     background:rgba(14,22,38,.86);border:1px solid rgba(79,70,229,.25);border-radius:16px;padding:18px 16px 14px;backdrop-filter:blur(14px)}
-  .hdr{display:flex;align-items:center;gap:10px;margin-bottom:6px}
-  .dot{width:10px;height:10px;border-radius:50%;background:var(--indigo);box-shadow:0 0 16px var(--indigo)}
-  .title{font-weight:700}.big{font-size:20px;color:#fff;margin:6px 0 2px;font-weight:700}
+  .big{font-size:20px;color:#fff;margin:6px 0 2px;font-weight:700}
   .step{margin-top:4px;font-size:14px;color:var(--muted)}
   .controls{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:12px}
-  .tags{display:flex;flex-wrap:wrap;gap:8px}.tag{font-size:12px;color:#e7e7ff;background:linear-gradient(180deg,rgba(79,70,229,.20),rgba(126,34,206,.15));border:1px solid rgba(126,34,206,.35);padding:6px 10px;border-radius:999px}
+  .tags{display:flex;flex-wrap:wrap;gap:8px}.tag{font-size:12px;color:#e7e7ff;background:rgba(79,70,229,.20);border:1px solid rgba(126,34,206,.35);padding:6px 10px;border-radius:999px}
   .btns{display:flex;gap:10px}
   button{all:unset;cursor:pointer;border-radius:12px;font-weight:700;font-size:14px;padding:10px 14px;color:#fff;background:linear-gradient(135deg,#4f46e5,#7e22ce)}
   button.secondary{background:transparent;color:#e5e7eb;border:1px solid rgba(148,163,184,.28)}
   button:disabled{opacity:.5;cursor:not-allowed}
-  .legend{position:fixed;right:20px;top:20px;z-index:2;display:flex;gap:10px;align-items:center;background:rgba(14,22,38,.75);border:1px solid rgba(79,70,229,.22);border-radius:12px;padding:8px 12px;color:#cbd5e1;font-size:12px}
-  .chip{display:flex;align-items:center;gap:6px}.pin{width:10px;height:10px;border-radius:50%}
-  .pin.home{background:var(--good)} .pin.study{background:var(--accent)} .pin.work{background:var(--work)} .pin.flight{background:var(--flight)}
-  #tip{position:fixed;z-index:3;pointer-events:none;transform:translate(-50%,-120%);background:rgba(14,22,38,.92);color:#e2e8f0;border:1px solid rgba(79,70,229,.25);padding:8px 10px;font-size:12px;border-radius:8px;display:none;white-space:nowrap}
-  @media (max-width:600px){.panel{left:12px;right:12px;width:auto}.big{font-size:18px}}
 </style>
 </head>
 <body>
 <div id="scene"></div>
 
-<div class="legend">
-  <div class="chip"><span class="pin home"></span> Origin</div>
-  <div class="chip"><span class="pin study"></span> Study</div>
-  <div class="chip"><span class="pin work"></span> Work</div>
-  <div class="chip"><span class="pin flight"></span> Flight Path</div>
-</div>
-
-<div id="tip"></div>
-
 <div class="panel">
-  <div class="hdr"><span class="dot"></span><div class="title">Globe Timeline • Shreyan</div></div>
   <div class="big" id="headline">Birth • Burdwan, India</div>
   <div class="step" id="copy">Starting point of the journey.</div>
   <div class="controls">
@@ -56,13 +36,11 @@
   </div>
 </div>
 
-<!-- Use ES Modules -->
 <script type="module">
 import * as THREE from 'https://unpkg.com/three@0.159.0/build/three.module.js';
 import { OrbitControls } from 'https://unpkg.com/three@0.159.0/examples/jsm/controls/OrbitControls.js';
 
 const R = 1;
-const deg2rad = d => d * Math.PI / 180;
 const scene = new THREE.Scene();
 scene.fog = new THREE.FogExp2(0x06080d, 0.12);
 
@@ -84,11 +62,13 @@ controls.autoRotateSpeed = 0.4;
 
 // Lights
 scene.add(new THREE.HemisphereLight(0xbfd4ff, 0x0b0f17, 1.0));
-const dl = new THREE.DirectionalLight(0xffffff, 1.0); dl.position.set(5,3,2); scene.add(dl);
+const dl = new THREE.DirectionalLight(0xffffff, 1.0);
+dl.position.set(5,3,2);
+scene.add(dl);
 
 // Stars
 const starsGeo = new THREE.BufferGeometry();
-const starCount = 1600;
+const starCount = 1400;
 const positions = new Float32Array(starCount*3);
 for (let i=0;i<starCount;i++){
   const r=40+Math.random()*40, th=Math.random()*Math.PI*2, ph=Math.acos(Math.random()*2-1);
@@ -99,21 +79,39 @@ for (let i=0;i<starCount;i++){
 starsGeo.setAttribute('position', new THREE.BufferAttribute(positions,3));
 scene.add(new THREE.Points(starsGeo, new THREE.PointsMaterial({color:0x98a2b3,size:0.1,opacity:0.7,transparent:true})));
 
-// Earth group
-const earthGroup = new THREE.Group(); scene.add(earthGroup);
+// Earth
+const loader = new THREE.TextureLoader();
+loader.setCrossOrigin('anonymous');
+const earthMat = new THREE.MeshPhongMaterial({
+  color:0x1b3a6b, specular:new THREE.Color("#222"), shininess:12
+});
 
-// Robust material with local texture fallback
-const loader = new THREE.TextureLoader(); loader.setCrossOrigin('anonymous');
-const earthMat = new THREE.MeshPhongMaterial({ color:0x1b3a6b, specular:new THREE.Color("#222"), shininess:12 });
+// CORS-safe CDN textures (no local files needed)
+loader.load('https://planet-texture-maps.s3.us-east-2.amazonaws.com/earthmap4k.jpg',
+  tex => { earthMat.map=tex; earthMat.needsUpdate=true; },
+  undefined,
+  () => console.warn('Diffuse texture failed; using solid color.')
+);
+loader.load('https://planet-texture-maps.s3.us-east-2.amazonaws.com/earthbump4k.jpg',
+  tex => { earthMat.bumpMap=tex; earthMat.bumpScale=0.02; earthMat.needsUpdate=true; },
+  undefined,
+  () => {} // ok if it fails
+);
 
-loader.load('earth.jpg', tex => { earthMat.map=tex; earthMat.needsUpdate=true; }, undefined, ()=>console.warn('earth.jpg missing; using color'));
-loader.load('earth-bump.png', tex => { earthMat.bumpMap=tex; earthMat.bumpScale=0.02; earthMat.needsUpdate=true; }, undefined, ()=>{});
+const earthGroup = new THREE.Group();
+scene.add(earthGroup);
 
-const earth = new THREE.Mesh(new THREE.SphereGeometry(R,96,96), earthMat); earthGroup.add(earth);
-const atmosphere = new THREE.Mesh(new THREE.SphereGeometry(R*1.02,64,64), new THREE.MeshBasicMaterial({color:0x7c3aed, transparent:true, opacity:.1, blending:THREE.AdditiveBlending}));
+const earth = new THREE.Mesh(new THREE.SphereGeometry(R, 96, 96), earthMat);
+earthGroup.add(earth);
+
+const atmosphere = new THREE.Mesh(
+  new THREE.SphereGeometry(R*1.02,64,64),
+  new THREE.MeshBasicMaterial({color:0x7c3aed, transparent:true, opacity:.1, blending:THREE.AdditiveBlending})
+);
 earthGroup.add(atmosphere);
 
 // Helpers
+const deg2rad = d => d * Math.PI / 180;
 function latLngToVec3(lat, lng, radius=R){
   const phi=deg2rad(90-lat), theta=deg2rad(lng+180);
   return new THREE.Vector3(
@@ -150,103 +148,182 @@ function makePlane(color=0xf59e0b){
 }
 
 // Steps
-const steps=[{
-  key:"birth",headline:"Birth • Burdwan, India",copy:"Starting point of the journey.",tags:["Origin","West Bengal"],
-  focus:{lat:23.2324,lng:87.8615,dist:2.6,tilt:.25},pins:[{lat:23.2324,lng:87.8615,type:"home",label:"Burdwan"}]
-},{
-  key:"school",headline:"Schooling • Burdwan",copy:"Formative years and early curiosity for science.",tags:["Schooling","Foundation"],
-  focus:{lat:23.2324,lng:87.8615,dist:2.2,tilt:.15},pins:[{lat:23.2324,lng:87.8615,type:"home",label:"Burdwan"}]
-},{
-  key:"undergrad",headline:"Undergraduate • NIT Durgapur",copy:"Electronics and Communication Engineering at NIT Durgapur.",tags:["NIT Durgapur","ECE","India"],
-  focus:{lat:23.5204,lng:87.3119,dist:2.1,tilt:.15},pins:[{lat:23.5204,lng:87.3119,type:"study",label:"NIT Durgapur"}]
-},{
-  key:"grad",headline:"Graduate Studies • University at Buffalo",copy:"Masters and PhD in Electrical Engineering at UB, Buffalo, USA.",tags:["UB","Masters","PhD","USA"],
-  focus:{lat:42.8864,lng:-78.8784,dist:2.3,tilt:.2},pins:[{lat:42.8864,lng:-78.8784,type:"study",label:"Buffalo"}],
-  action:{type:"flight",from:{lat:22.5726,lng:88.3639,label:"Kolkata"},to:{lat:42.8864,lng:-78.8784,label:"Buffalo"}]
-},{
-  key:"intern",headline:"Internship • Boston, USA",copy:"Nanofabrication and SEM process engineering internship experience in Boston.",tags:["Internship","Nanofab","SEM"],
-  focus:{lat:42.3601,lng:-71.0589,dist:2.1,tilt:.2},pins:[{lat:42.3601,lng:-71.0589,type:"work",label:"Boston"}],
-  action:{type:"flight",from:{lat:42.8864,lng:-78.8784,label:"Buffalo"},to:{lat:42.3601,lng:-71.0589,label:"Boston"}]
-}];
+const steps=[
+  {
+    key:"birth",
+    headline:"Birth • Burdwan, India",
+    copy:"Starting point of the journey.",
+    tags:["Origin","West Bengal"],
+    focus:{lat:23.2324,lng:87.8615,dist:2.6,tilt:.25},
+    pins:[{lat:23.2324,lng:87.8615,type:"home",label:"Burdwan"}]
+  },
+  {
+    key:"school",
+    headline:"Schooling • Burdwan",
+    copy:"Formative years and early curiosity for science.",
+    tags:["Schooling","Foundation"],
+    focus:{lat:23.2324,lng:87.8615,dist:2.2,tilt:.15},
+    pins:[{lat:23.2324,lng:87.8615,type:"home",label:"Burdwan"}]
+  },
+  {
+    key:"undergrad",
+    headline:"Undergraduate • NIT Durgapur",
+    copy:"Electronics and Communication Engineering at NIT Durgapur.",
+    tags:["NIT Durgapur","ECE","India"],
+    focus:{lat:23.5204,lng:87.3119,dist:2.1,tilt:.15},
+    pins:[{lat:23.5204,lng:87.3119,type:"study",label:"NIT Durgapur"}]
+  },
+  {
+    key:"grad",
+    headline:"Graduate Studies • University at Buffalo",
+    copy:"Masters and PhD in Electrical Engineering at UB, Buffalo, USA.",
+    tags:["UB","Masters","PhD","USA"],
+    focus:{lat:42.8864,lng:-78.8784,dist:2.3,tilt:.2},
+    pins:[{lat:42.8864,lng:-78.8784,type:"study",label:"Buffalo"}],
+    action:{type:"flight",from:{lat:22.5726,lng:88.3639,label:"Kolkata"},to:{lat:42.8864,lng:-78.8784,label:"Buffalo"}]
+  },
+  {
+    key:"intern",
+    headline:"Internship • Boston, USA",
+    copy:"Nanofabrication and SEM experience in Boston.",
+    tags:["Internship","Nanofab","SEM"],
+    focus:{lat:42.3601,lng:-71.0589,dist:2.1,tilt:.2},
+    pins:[{lat:42.3601,lng:-71.0589,type:"work",label:"Boston"}],
+    action:{type:"flight",from:{lat:42.8864,lng:-78.8784,label:"Buffalo"},to:{lat:42.3601,lng:-71.0589,label:"Boston"}]
+  }
+];
 
-// UI
+// UI refs
 const headlineEl=document.getElementById('headline');
 const copyEl=document.getElementById('copy');
 const tagsEl=document.getElementById('tags');
-const tipEl=document.getElementById('tip');
 const prevBtn=document.getElementById('prev');
 const nextBtn=document.getElementById('next');
 
-let current=0, pinObjects=[], activeArc=null, plane=null, planePath=null, planeProg=0;
+// Step state
+let currentIndex = 0;
+let pinObjects = [];
+let activeArc = null;
+let plane = null;
+let planePath = null;
+let planeProg = 0;
 
-// Deep link
-function setURLStep(key){const u=new URL(location.href);u.searchParams.set('step',key);history.replaceState(null,'',u.toString());}
-function getURLStepIndex(){const k=new URL(location.href).searchParams.get('step');const i=steps.findIndex(s=>s.key===k);return i>=0?i:0;}
+// Deep link helpers
+function setURLStep(key){
+  const u=new URL(location.href);
+  u.searchParams.set('step',key);
+  history.replaceState(null,'',u.toString());
+}
+function getURLStepIndex(){
+  const k=new URL(location.href).searchParams.get('step');
+  const i=steps.findIndex(s=>s.key===k);
+  return i>=0?i:0;
+}
 
 // Camera ease
-function easeCameraTo(lat,lng,dist=2.4,tilt=.2,ms=1400){
-  const target=latLngToVec3(lat,lng); const qStart=earthGroup.quaternion.clone();
+function easeCameraTo(lat,lng,dist=2.4,tilt=.2,ms=1200){
+  const target=latLngToVec3(lat,lng);
+  const qStart=earthGroup.quaternion.clone();
   const m=new THREE.Matrix4().lookAt(target,new THREE.Vector3(0,0,0),new THREE.Vector3(0,1,0));
   const qEnd=new THREE.Quaternion().setFromRotationMatrix(m).invert();
-  const cStart=camera.position.clone(); const cEnd=target.clone().normalize().multiplyScalar(dist);
-  const t0=performance.now(); (function anim(){const t=Math.min(1,(performance.now()-t0)/ms);const s=t*t*(3-2*t);
-    THREE.Quaternion.slerp(qStart,qEnd,earthGroup.quaternion,s); camera.position.lerpVectors(cStart,cEnd,s); camera.lookAt(0,0,0);
-    if(t<1) requestAnimationFrame(anim);})();
+  const cStart=camera.position.clone();
+  const cEnd=target.clone().normalize().multiplyScalar(dist);
+  const t0=performance.now();
+  (function anim(){
+    const t=Math.min(1,(performance.now()-t0)/ms);
+    const s=t*t*(3-2*t);
+    THREE.Quaternion.slerp(qStart,qEnd,earthGroup.quaternion,s);
+    camera.position.lerpVectors(cStart,cEnd,s);
+    camera.lookAt(0,0,0);
+    if(t<1) requestAnimationFrame(anim);
+  })();
 }
 
 // Pins
-function clearPins(){pinObjects.forEach(p=>earthGroup.remove(p)); pinObjects=[];}
-function showPins(step){clearPins(); (step.pins||[]).forEach(p=>{const obj=placePin(p.lat,p.lng,p.type); obj.userData={label:p.label}; pinObjects.push(obj);});}
-
-// Tooltip
-const raycaster=new THREE.Raycaster(); const mouse=new THREE.Vector2(-10,-10);
-renderer.domElement.addEventListener('mousemove',e=>{const r=renderer.domElement.getBoundingClientRect();
-  mouse.x=((e.clientX-r.left)/r.width)*2-1; mouse.y=-((e.clientY-r.top)/r.height)*2+1;});
-function updateTooltip(ev){
-  raycaster.setFromCamera(mouse,camera);
-  const hits=raycaster.intersectObjects(pinObjects,true);
-  if(hits.length){ const p=hits[0].object.parent; if(p?.userData?.label){ tipEl.style.display='block'; tipEl.textContent=p.userData.label;
-      tipEl.style.left=(ev?.clientX||window.innerWidth/2)+'px'; tipEl.style.top=(ev?.clientY||window.innerHeight/2)+'px'; return;}}
-  tipEl.style.display='none';
+function clearPins(){
+  pinObjects.forEach(p=>earthGroup.remove(p));
+  pinObjects=[];
 }
-window.addEventListener('mousemove',updateTooltip);
+function showPins(step){
+  clearPins();
+  (step.pins||[]).forEach(p=>{
+    const obj=placePin(p.lat,p.lng,p.type);
+    obj.userData={label:p.label};
+    pinObjects.push(obj);
+  });
+}
 
 // Flights
-function clearFlight(){ if(activeArc){earthGroup.remove(activeArc);activeArc=null;} if(plane){earthGroup.remove(plane);plane=null;planePath=null;planeProg=0;} }
-function launchFlight(from,to){ clearFlight(); const pts=greatCircleCurve(from.lat,from.lng,to.lat,to.lng,.35,160);
-  activeArc=arcMesh(pts,0xf59e0b); earthGroup.add(activeArc); plane=makePlane(); earthGroup.add(plane); planePath=pts; planeProg=0; }
+function clearFlight(){
+  if(activeArc){earthGroup.remove(activeArc);activeArc=null;}
+  if(plane){earthGroup.remove(plane);plane=null;planePath=null;planeProg=0;}
+}
+function launchFlight(from,to){
+  clearFlight();
+  const pts=greatCircleCurve(from.lat,from.lng,to.lat,to.lng,.35,160);
+  activeArc=arcMesh(pts,0xf59e0b);
+  earthGroup.add(activeArc);
+  plane=makePlane();
+  earthGroup.add(plane);
+  planePath=pts; planeProg=0;
+}
 
 // UI render
 function setUI(step){
-  headlineEl.textContent=step.headline; copyEl.textContent=step.copy; tagsEl.innerHTML="";
-  step.tags.forEach(t=>{const s=document.createElement('span'); s.className='tag'; s.textContent=t; tagsEl.appendChild(s);});
-  prevBtn.disabled=(current===0); nextBtn.disabled=(current===steps.length-1);
+  headlineEl.textContent=step.headline;
+  copyEl.textContent=step.copy;
+  tagsEl.innerHTML="";
+  step.tags.forEach(t=>{
+    const s=document.createElement('span');
+    s.className='tag';
+    s.textContent=t;
+    tagsEl.appendChild(s);
+  });
+  prevBtn.disabled=(currentIndex===0);
+  nextBtn.disabled=(currentIndex===steps.length-1);
 }
 function runStep(i,first=false){
-  const step=steps[i]; setUI(step); setURLStep(step.key); showPins(step);
-  easeCameraTo(step.focus.lat,step.focus.lng,step.focus.dist,step.focus.tilt, first?900:1400);
-  if(step.action?.type==="flight") launchFlight(step.action.from,step.action.to); else clearFlight();
+  const step=steps[i];
+  setUI(step);
+  setURLStep(step.key);
+  showPins(step);
+  easeCameraTo(step.focus.lat,step.focus.lng,step.focus.dist,step.focus.tilt, first?800:1200);
+  if(step.action?.type==="flight") launchFlight(step.action.from,step.action.to);
+  else clearFlight();
 }
-prevBtn.onclick=()=>{ if(current>0){ current--; runStep(current); } };
-nextBtn.onclick=()=>{ if(current<steps.length-1){ current++; runStep(current); } };
+prevBtn.onclick=()=>{ if(currentIndex>0){ currentIndex--; runStep(currentIndex); } };
+nextBtn.onclick=()=>{ if(currentIndex<steps.length-1){ currentIndex++; runStep(currentIndex); } };
 
 // Animate
 function tick(){
-  requestAnimationFrame(tick); controls.update(); earth.rotation.y+=0.00015;
-  if(plane && planePath){ planeProg=Math.min(1,planeProg+0.003); const idx=Math.floor(planeProg*(planePath.length-1));
-    const p=planePath[idx], p2=planePath[Math.min(idx+1,planePath.length-1)];
-    plane.position.set(p.x,p.y,p.z); const up=p.clone().normalize(); const m=new THREE.Matrix4().lookAt(p,p2,up); plane.quaternion.setFromRotationMatrix(m);
-    if(activeArc){ activeArc.material.opacity=0.6+0.25*Math.sin(performance.now()*0.004); } }
+  requestAnimationFrame(tick);
+  controls.update();
+  earth.rotation.y+=0.00015;
+  if(plane && planePath){
+    planeProg=Math.min(1,planeProg+0.003);
+    const idx=Math.floor(planeProg*(planePath.length-1));
+    const p=planePath[idx];
+    const p2=planePath[Math.min(idx+1,planePath.length-1)];
+    plane.position.set(p.x,p.y,p.z);
+    const up=p.clone().normalize();
+    const m=new THREE.Matrix4().lookAt(p,p2,up);
+    plane.quaternion.setFromRotationMatrix(m);
+    if(activeArc){ activeArc.material.opacity=0.6+0.25*Math.sin(performance.now()*0.004); }
+  }
   renderer.render(scene,camera);
 }
 tick();
 
 // Resize
-addEventListener('resize',()=>{camera.aspect=innerWidth/innerHeight; camera.updateProjectionMatrix(); renderer.setSize(innerWidth,innerHeight);});
+addEventListener('resize',()=>{
+  camera.aspect=innerWidth/innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(innerWidth,innerHeight);
+});
 
 // Boot
-let current = getURLStepIndex();
-runStep(current,true);
+currentIndex = getURLStepIndex();
+runStep(currentIndex,true);
 </script>
 </body>
 </html>
