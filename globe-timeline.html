@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1"/>
-<title>Shreyan • Map Timeline (City Zoom)</title>
+<title>Shreyan • Map Timeline</title>
 
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
@@ -12,6 +12,7 @@
   :root{
     --bg:#0c1020; --panel:#0f162b; --text:#e8ecf8; --muted:#a9b2c9;
     --origin:#14b8a6; --study:#60a5fa; --work:#f59e0b;
+    --glass:rgba(15,22,43,.86);
   }
   *{box-sizing:border-box}
   html,body{height:100%;margin:0;background:var(--bg);color:var(--text);
@@ -19,7 +20,7 @@
   #map{position:fixed; inset:0}
 
   .hud{position:fixed; left:16px; bottom:16px; z-index:5000;
-       width:min(560px,calc(100% - 32px)); background:rgba(15,22,43,.86);
+       width:min(560px,calc(100% - 32px)); background:var(--glass);
        border:1px solid rgba(255,255,255,.08); border-radius:16px; padding:14px;
        backdrop-filter:blur(8px)}
   .row{display:flex;align-items:center;gap:10px}
@@ -39,6 +40,28 @@
   .lg{display:flex; align-items:center; gap:6px; color:#cdd8f0}
 
   .leaflet-marker-icon.pin:hover{filter: drop-shadow(0 0 8px rgba(255,255,255,.5))}
+
+  /* Big gallery overlay */
+  .overlay{position:fixed; inset:0; display:none; align-items:center; justify-content:center;
+           background:rgba(0,0,0,.6); z-index:6000; backdrop-filter:blur(3px)}
+  .overlay.show{display:flex}
+  .gallery{position:relative; width:min(1000px,90vw); height:min(650px,85vh);
+           background:#0b1022; border:1px solid rgba(255,255,255,.12);
+           border-radius:18px; overflow:hidden; box-shadow:0 20px 70px rgba(0,0,0,.5)}
+  .gal-head{display:flex; align-items:center; justify-content:space-between;
+            padding:10px 14px; background:rgba(255,255,255,.04)}
+  .gal-title{font-weight:700}
+  .gal-sub{color:#a9b2c9; font-size:13px}
+  .close{cursor:pointer; border:0; color:#fff; background:#1e2a55;
+         padding:6px 10px; border-radius:10px}
+  .viewer{position:absolute; inset:46px 0 0 0; display:flex; align-items:center; justify-content:center}
+  .viewer img{max-width:100%; max-height:100%; object-fit:contain}
+
+  .navbtn{position:absolute; top:50%; transform:translateY(-50%);
+          background:rgba(0,0,0,.45); border:1px solid rgba(255,255,255,.2);
+          color:#fff; font-size:22px; padding:10px 14px; border-radius:12px; cursor:pointer}
+  .navbtn:hover{background:rgba(0,0,0,.6)}
+  .prev{left:10px} .next{right:10px}
 </style>
 </head>
 <body>
@@ -56,35 +79,73 @@
       <div id="title" class="title">Birth • Burdwan, India</div>
     </div>
     <div id="subtitle" class="sub">Starting point of the journey.</div>
-    <div id="desc" class="desc">Use Next to follow the path. Click a pin to zoom into that city.</div>
+    <div id="desc" class="desc">Click a pin or press Next. Hover over a pin to preview images; click to open gallery.</div>
     <div class="controls">
       <button id="prev" class="btn">Prev</button>
       <button id="next" class="btn primary">Next</button>
     </div>
   </div>
 
+  <!-- Image Gallery Overlay -->
+  <div id="overlay" class="overlay" role="dialog" aria-modal="true">
+    <div class="gallery">
+      <div class="gal-head">
+        <div>
+          <div class="gal-title" id="galTitle">Location</div>
+          <div class="gal-sub" id="galSub">Subtitle</div>
+        </div>
+        <button class="close" id="closeGal">Close ✕</button>
+      </div>
+      <div class="viewer">
+        <button class="navbtn prev" id="prevImg">‹</button>
+        <img id="galImg" src="" alt="Gallery image"/>
+        <button class="navbtn next" id="nextImg">›</button>
+      </div>
+    </div>
+  </div>
+
 <script>
-/* ------------ Data (tune radiusKm to control how much city is visible) ------------ */
+/* -------------------- DATA -------------------- */
+/* Replace image URLs with your repo files later, e.g. 'images/burdwan-1.jpg' */
 const steps = [
   { id:'birth',  type:'origin', title:'Birth • Burdwan, India',
     subtitle:'Starting point of the journey.', desc:'Burdwan (Bardhaman), West Bengal.',
-    lat:23.2324, lon:87.8615, radiusKm:10 },
+    lat:23.2324, lon:87.8615, radiusKm:10,
+    images:[
+      'https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?q=80&w=1200&auto=format&fit=crop'
+    ]},
   { id:'school', type:'origin', title:'School • Burdwan, India',
     subtitle:'Early education.', desc:'Formative years and first sparks of science.',
-    lat:23.2324, lon:87.8615, radiusKm:10 },
+    lat:23.2324, lon:87.8615, radiusKm:10,
+    images:[
+      'https://images.unsplash.com/photo-1529070538774-1843cb3265df?q=80&w=1200&auto=format&fit=crop',
+      'https://images.unsplash.com/photo-1497633762265-9d179a990aa6?q=80&w=1200&auto=format&fit=crop'
+    ]},
   { id:'nit',    type:'study',  title:'Undergrad • NIT Durgapur',
     subtitle:'Electronics & Communication Engineering', desc:'NIT Durgapur, West Bengal.',
-    lat:23.5505, lon:87.2910, radiusKm:12 },
+    lat:23.5505, lon:87.2910, radiusKm:12,
+    images:[
+      'https://images.unsplash.com/photo-1523580846011-d3a5bc25702b?q=80&w=1200&auto=format&fit=crop'
+    ]},
   { id:'ub',     type:'study',  title:'MS & PhD • University at Buffalo',
     subtitle:'Nanophotonics & Biosensing', desc:'SUNY Buffalo, New York.',
-    lat:42.9990, lon:-78.7800, radiusKm:20 },
+    lat:42.9990, lon:-78.7800, radiusKm:22,
+    images:[
+      'https://images.unsplash.com/photo-1500534314209-a25ddb2bd429?q=80&w=1200&auto=format&fit=crop',
+      'https://images.unsplash.com/photo-1469474968028-56623f02e42e?q=80&w=1200&auto=format&fit=crop'
+    ]},
   { id:'boston', type:'work',   title:'Internship • Boston, USA',
     subtitle:'Summer at a meta‑optics company', desc:'Hands‑on SEM & process analysis.',
-    lat:42.3601, lon:-71.0589, radiusKm:18 }
+    lat:42.3601, lon:-71.0589, radiusKm:18,
+    images:[
+      'https://images.unsplash.com/photo-1508057198894-247b23fe5ade?q=80&w=1200&auto=format&fit=crop',
+      'https://images.unsplash.com/photo-1534088568595-a066f410bcda?q=80&w=1200&auto=format&fit=crop',
+      'https://images.unsplash.com/photo-1523731407965-2430cd12f5e4?q=80&w=1200&auto=format&fit=crop'
+    ]}
 ];
 const typeColor = t => t==='origin' ? '#14b8a6' : (t==='study' ? '#60a5fa' : '#f59e0b');
 
-/* ---------------- Map: satellite tiles, no extra labels ---------------- */
+/* -------------------- MAP -------------------- */
 const map = L.map('map', {
   center:[20,78], zoom:4, minZoom:2, maxZoom:19,
   zoomControl:false, worldCopyJump:true, zoomAnimation:true, inertia:true
@@ -95,21 +156,8 @@ L.tileLayer(
   { attribution:'Tiles © Esri — Source: Esri, Maxar, Earthstar Geographics', crossOrigin:true }
 ).addTo(map);
 
-/* ---------------- Pins ---------------- */
+/* -------------------- PINS + HUD -------------------- */
 const pinLayer = L.layerGroup().addTo(map);
-steps.forEach(s=>{
-  const icon = L.divIcon({
-    className:'pin',
-    html:`<div style="width:16px;height:16px;border-radius:50%;
-                  background:${typeColor(s.type)};
-                  border:2px solid #0c1020; box-shadow:0 0 0 2px rgba(255,255,255,.18)"></div>`,
-    iconSize:[16,16], iconAnchor:[8,8]
-  });
-  const m = L.marker([s.lat, s.lon], {icon}).addTo(pinLayer);
-  m.on('click', ()=> focusCity(s));
-});
-
-/* ---------------- HUD + sequencing ---------------- */
 const typeDot = document.getElementById('typeDot');
 const titleEl = document.getElementById('title');
 const subEl   = document.getElementById('subtitle');
@@ -119,16 +167,40 @@ const nextBtn = document.getElementById('next');
 
 let idx = 0;
 setHUD(steps[0]);
-fitCity(steps[0]); // first load: just zoom to first stop
+
+steps.forEach((s, i)=>{
+  const icon = L.divIcon({
+    className:'pin',
+    html:`<div style="width:16px;height:16px;border-radius:50%;
+                  background:${typeColor(s.type)};
+                  border:2px solid #0c1020; box-shadow:0 0 0 2px rgba(255,255,255,.18)"></div>`,
+    iconSize:[16,16], iconAnchor:[8,8]
+  });
+  const m = L.marker([s.lat, s.lon], {icon}).addTo(pinLayer);
+
+  // Hover preview (open gallery overlay with first image)
+  m.on('mouseover', ()=> openGallery(i, /*startIndex*/0, /*fromHover*/true));
+  m.on('mouseout', ()=> { if (overlay.dataset.auto === 'true') closeGallery(); });
+
+  // Click = focus city + open gallery
+  m.on('click', ()=> {
+    focusCity(s);
+    openGallery(i, 0, false); // user-clicked → keep overlay open
+  });
+});
 
 prevBtn.onclick = ()=> goTo(idx-1);
 nextBtn.onclick = ()=> goTo(idx+1);
 
-function goTo(newIndex){
+/* -------------------- SEQUENCE: zoom‑out → fly → city zoom -------------------- */
+const OUT_ZOOM = 3.5, OUT_DUR = 0.9, IN_DUR = 1.6;
+function once(target, event){ return new Promise(res => target.once(event, res)); }
+
+async function goTo(newIndex){
   idx = Math.max(0, Math.min(steps.length-1, newIndex));
   const s = steps[idx];
   setHUD(s);
-  sequenceToCity(s).catch(()=>{});
+  await sequenceToCity(s);
   prevBtn.disabled = idx===0;
   nextBtn.disabled = idx===steps.length-1;
 }
@@ -138,50 +210,71 @@ function setHUD(s){
   subEl.textContent   = s.subtitle;
   descEl.textContent  = s.desc;
 }
-
-/* ---------------- Animation: zoom‑out → fly → zoom‑in ---------------- */
-const OUT_ZOOM = 3.5, OUT_DUR = 0.9, IN_DUR = 1.6;
-
-function once(target, event){
-  return new Promise(resolve => target.once(event, resolve));
-}
 async function sequenceToCity(s){
-  map.stop(); // cancel any ongoing animation
-
-  // Step 1: zoom out a bit (only if we’re currently close)
+  map.stop();
   if (map.getZoom() > OUT_ZOOM + 0.1){
     map.flyTo(map.getCenter(), OUT_ZOOM, {duration: OUT_DUR, animate:true});
     await once(map, 'zoomend');
   }
-
-  // Step 2: glide to new city at OUT_ZOOM
   map.flyTo([s.lat, s.lon], OUT_ZOOM, {duration: OUT_DUR, animate:true});
   await once(map, 'moveend');
-
-  // Step 3: force a proper city zoom
   await fitCity(s);
 }
+function focusCity(s){ sequenceToCity(s).catch(()=>{}); }
 
-/* ---- FIXED city zoom: compute best zoom from bounds, then fly to center at that zoom ---- */
+/* ---- FORCE city zoom (reliable): compute zoom from bounds, then fly to center ---- */
 function fitCity(s){
   return new Promise(resolve=>{
     const circle  = L.circle([s.lat, s.lon], { radius: (s.radiusKm || 12) * 1000 });
     const bounds  = circle.getBounds();
     const padding = [60, 60];
-
-    // Ask Leaflet the zoom that would fit these bounds
-    let desired = map.getBoundsZoom(bounds, true, padding);
-
-    // Clamp to a nice “city level” range; tweak as desired
-    desired = Math.min(Math.max(desired, 12), 14);
-
-    // Now fly directly to the center at the computed zoom (ensures real zoom‑in)
-    map.flyTo([s.lat, s.lon], desired, { duration: IN_DUR, animate: true });
+    let desired   = map.getBoundsZoom(bounds, true, padding);
+    desired       = Math.min(Math.max(desired, 12), 15); // clamp city zoom range
+    map.flyTo([s.lat, s.lon], desired, { duration: IN_DUR, animate:true });
     map.once('moveend', resolve);
   });
 }
 
-/* --------------- Optional: keyboard nav (←/→) ---------------- */
+/* -------------------- GALLERY OVERLAY -------------------- */
+const overlay  = document.getElementById('overlay');
+const galImg   = document.getElementById('galImg');
+const galTitle = document.getElementById('galTitle');
+const galSub   = document.getElementById('galSub');
+const closeGal = document.getElementById('closeGal');
+const prevImg  = document.getElementById('prevImg');
+const nextImg  = document.getElementById('nextImg');
+
+let galStepIndex = 0, galImageIndex = 0;
+
+// fromHover=true → auto-close when mouse leaves marker (quick preview)
+function openGallery(stepIndex, startImageIndex=0, fromHover=false){
+  galStepIndex  = stepIndex;
+  galImageIndex = startImageIndex;
+  const s = steps[galStepIndex];
+  galTitle.textContent = s.title;
+  galSub.textContent   = s.subtitle;
+  overlay.dataset.auto = fromHover ? 'true' : 'false';
+  setGalleryImage();
+  overlay.classList.add('show');
+}
+function closeGallery(){
+  overlay.classList.remove('show');
+}
+function setGalleryImage(){
+  const s = steps[galStepIndex];
+  if (!s.images || s.images.length===0){ galImg.removeAttribute('src'); return; }
+  galImageIndex = (galImageIndex + s.images.length) % s.images.length;
+  galImg.src = s.images[galImageIndex];
+}
+closeGal.onclick = closeGallery;
+prevImg.onclick  = ()=>{ galImageIndex--; setGalleryImage(); };
+nextImg.onclick  = ()=>{ galImageIndex++; setGalleryImage(); };
+overlay.addEventListener('click', e=>{
+  if (e.target === overlay) closeGallery();
+});
+
+/* -------------------- INIT -------------------- */
+fitCity(steps[0]); // start zoomed into first location
 window.addEventListener('keydown', e=>{
   if (e.key==='ArrowRight') nextBtn.click();
   if (e.key==='ArrowLeft')  prevBtn.click();
