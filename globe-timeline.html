@@ -3,94 +3,90 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Shreyan • Globe Timeline</title>
+<title>Shreyan • Map Timeline</title>
+
+<!-- Leaflet (no API key) -->
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
 <style>
   :root{
-    --bg:#0b1020; --panel:#0f162b; --panel-2:#0c1426;
-    --ring:#3b82f6; --text:#e5e7eb; --muted:#9aa4c7; --accent:#8b5cf6;
-    --origin:#14b8a6; --study:#60a5fa; --work:#f59e0b; --flight:#8b5cf6;
+    --bg:#0b1020; --panel:#0f162b; --panel2:#0c1426; --text:#e5e7eb; --muted:#a8b3cf;
+    --origin:#14b8a6; --study:#60a5fa; --work:#f59e0b; --flight:#8b5cf6; --accent:#8b5cf6;
   }
-  *{box-sizing:border-box} html,body{height:100%;margin:0;background:radial-gradient(1200px 600px at 50% -10%, #17203d 0%, var(--bg) 45%, #070a14 100%); color:var(--text); font:14px/1.4 system-ui, -apple-system, Segoe UI, Roboto, "Inter", Arial}
-  #gl {position:fixed; inset:0; z-index:1; pointer-events:none}
-  .ui{position:relative; z-index:10}
-  .legend{position:fixed; top:12px; right:12px; display:flex; gap:14px; background:rgba(15,22,43,.6); border:1px solid rgba(255,255,255,.06); padding:8px 12px; border-radius:14px; backdrop-filter: blur(8px)}
-  .lg-badge{display:flex; align-items:center; gap:6px; color:var(--muted)}
+  *{box-sizing:border-box} html,body{height:100%;margin:0;background:var(--bg);color:var(--text);
+    font:14px/1.45 system-ui, -apple-system, "Segoe UI", Roboto, Inter, Arial}
+  #map{position:fixed; inset:0}
+  .legend{position:fixed; top:12px; right:12px; z-index:5000; display:flex; gap:12px; background:rgba(15,22,43,.65);
+    border:1px solid rgba(255,255,255,.08); padding:8px 12px; border-radius:14px; backdrop-filter: blur(8px)}
+  .lg{display:flex; align-items:center; gap:6px; color:var(--muted)}
   .dot{width:8px; height:8px; border-radius:50%}
-  .card{position:fixed; left:16px; bottom:16px; width:min(560px, calc(100% - 32px)); background:rgba(15,22,43,.85);
+  .card{position:fixed; left:16px; bottom:16px; z-index:5000; width:min(560px, calc(100% - 32px)); background:rgba(15,22,43,.85);
         border:1px solid rgba(255,255,255,.06); border-radius:16px; padding:16px; backdrop-filter: blur(8px)}
-  .h{font-weight:700; margin:0 0 4px}
-  .t{color:#c9d4ff; margin:0 0 8px}
+  .row{display:flex; align-items:center; gap:8px; margin-bottom:6px}
+  .h{font-weight:700; margin:0}
+  .t{color:#cfe0ff; margin:4px 0 8px}
   .d{color:var(--muted)}
-  .row{display:flex; align-items:center; gap:8px; margin-bottom:10px}
   .controls{display:flex; gap:10px; margin-top:10px}
-  .btn{background:#1b2442; color:#dfe6ff; border:1px solid rgba(255,255,255,.08); padding:8px 14px; border-radius:12px; cursor:pointer}
-  .btn:disabled{opacity:.5; cursor:not-allowed}
+  .btn{background:#1b2442; color:#e6eaff; border:1px solid rgba(255,255,255,.08); padding:8px 14px; border-radius:12px; cursor:pointer}
   .btn.primary{background:linear-gradient(135deg,#6d28d9,#8b5cf6); border:0}
-  .hover-card{position:fixed; transform:translate(-50%,-120%); pointer-events:none; display:none;
-              width:220px; background:rgba(15,22,43,.92); border:1px solid rgba(255,255,255,.08); border-radius:12px; overflow:hidden; box-shadow:0 10px 30px rgba(0,0,0,.5)}
-  .hover-card img{display:block; width:100%; height:140px; object-fit:cover}
-  .hover-card .hc-txt{padding:8px 10px; color:#cbd5e1}
-  /* Pin label (screen space) */
-  .pin-label{position:absolute; padding:2px 6px; font-size:12px; border-radius:8px; background:rgba(0,0,0,.45); border:1px solid rgba(255,255,255,.08); color:#e5e7eb; transform:translate(-50%,-140%); white-space:nowrap; display:none}
+  .btn:disabled{opacity:.5; cursor:not-allowed}
+
+  /* hover preview */
+  .hover{position:fixed; z-index:6000; display:none; width:240px; transform:translate(-50%,-120%);
+         background:rgba(15,22,43,.95); border:1px solid rgba(255,255,255,.08); border-radius:12px; overflow:hidden;
+         box-shadow:0 12px 36px rgba(0,0,0,.45)}
+  .hover img{display:block; width:100%; height:140px; object-fit:cover}
+  .hover .hx{padding:8px 10px; color:#dbe7ff}
+  a,a:visited{color:#c6b4ff}
 </style>
 </head>
 <body>
-<canvas id="gl"></canvas>
 
-<!-- hover preview -->
-<div id="hover" class="hover-card">
-  <img id="hoverImg" alt="">
-  <div class="hc-txt" id="hoverTxt"></div>
+<div id="map" aria-label="Infinite scrolling map timeline"></div>
+
+<!-- legend -->
+<div class="legend">
+  <div class="lg"><span class="dot" style="background:var(--origin)"></span>Origin</div>
+  <div class="lg"><span class="dot" style="background:var(--study)"></span>Study</div>
+  <div class="lg"><span class="dot" style="background:var(--work)"></span>Work</div>
+  <div class="lg"><span class="dot" style="background:var(--flight)"></span>Flight Path</div>
 </div>
 
-<!-- pin labels container -->
-<div id="labels" class="ui"></div>
-
-<!-- Legend + bottom card -->
-<div class="ui legend">
-  <div class="lg-badge"><span class="dot" style="background:var(--origin)"></span>Origin</div>
-  <div class="lg-badge"><span class="dot" style="background:var(--study)"></span>Study</div>
-  <div class="lg-badge"><span class="dot" style="background:var(--work)"></span>Work</div>
-  <div class="lg-badge"><span class="dot" style="background:var(--flight)"></span>Flight Path</div>
-</div>
-
-<div class="ui card">
+<!-- bottom info card -->
+<div class="card">
   <div class="row">
-    <div class="dot" id="typeDot" style="background:var(--origin)"></div>
-    <div class="h" id="title">Birth • Burdwan, India</div>
+    <div id="typeDot" class="dot" style="background:var(--origin)"></div>
+    <div id="title" class="h">Birth • Burdwan, India</div>
   </div>
-  <div class="t" id="subtitle">Starting point of the journey.</div>
-  <div class="d" id="desc">Use Next to follow the path.</div>
+  <div id="subtitle" class="t">Starting point of the journey.</div>
+  <div id="desc" class="d">Use Next to follow the path.</div>
   <div class="controls">
     <button id="prev" class="btn">Prev</button>
     <button id="next" class="btn primary">Next</button>
   </div>
 </div>
 
-<script type="module">
-/* -------------------------------------------
-   Imports (ES Modules) – safe for GH Pages
---------------------------------------------*/
-import * as THREE from 'https://unpkg.com/three@0.159.0/build/three.module.js';
-import { OrbitControls } from 'https://unpkg.com/three@0.159.0/examples/jsm/controls/OrbitControls.js';
+<!-- hover preview -->
+<div id="hover" class="hover">
+  <img id="hoverImg" alt="">
+  <div id="hoverTxt" class="hx"></div>
+</div>
 
-/* -------------------------------------------
-   Data (you can edit freely)
---------------------------------------------*/
+<script>
+/* --------------------- Data --------------------- */
 const steps = [
   {
     id:'birth', type:'origin', title:'Birth • Burdwan, India',
     subtitle:'Starting point of the journey.',
     desc:'Burdwan (Bardhaman), West Bengal.',
-    lat:23.2324, lon:87.8615,
-    preview: sampleImage(1)
+    lat:23.2324, lon:87.8615, preview: sampleImage(1)
   },
   {
     id:'school', type:'origin', title:'School • Burdwan, India',
     subtitle:'Early education.',
     desc:'Formative years and first sparks of science.',
-    lat:23.2324, lon:87.8615,
-    preview: sampleImage(2)
+    lat:23.2324, lon:87.8615, preview: sampleImage(2)
   },
   {
     id:'nit', type:'study', title:'Undergrad • NIT Durgapur',
@@ -112,168 +108,114 @@ const steps = [
   }
 ];
 
-const colors = {
-  origin: new THREE.Color('#14b8a6'),
-  study:  new THREE.Color('#60a5fa'),
-  work:   new THREE.Color('#f59e0b'),
-  flight: new THREE.Color('#8b5cf6')
-};
+const typeColor = (t)=> t==='origin' ? '#14b8a6' : t==='study' ? '#60a5fa' : '#f59e0b';
 
-/* -------------------------------------------
-   Three.js basic scene
---------------------------------------------*/
-const canvas = document.getElementById('gl');
-const renderer = new THREE.WebGLRenderer({ canvas, antialias:true, alpha:true });
-renderer.setPixelRatio(Math.min(devicePixelRatio,2));
-renderer.setSize(innerWidth, innerHeight, false);
-
-const scene = new THREE.Scene();
-const camera = new THREE.PerspectiveCamera(45, innerWidth/innerHeight, 0.1, 2000);
-camera.position.set(0, 0, 7);
-const controls = new OrbitControls(camera, renderer.domElement);
-controls.enableDamping = true; controls.enablePan = false;
-controls.minDistance = 3; controls.maxDistance = 12;
-
-/* Lighting */
-scene.add(new THREE.AmbientLight(0xffffff, 0.8));
-const sun = new THREE.DirectionalLight(0xffffff, 0.8);
-sun.position.set(5,3,5); scene.add(sun);
-
-/* -------------------------------------------
-   Earth (no external textures)
-   Shader = lat-long gradient + subtle noise
---------------------------------------------*/
-const R = 2; // radius
-const earthGeo = new THREE.SphereGeometry(R, 160, 160);
-const earthMat = new THREE.ShaderMaterial({
-  uniforms:{
-    uTime:{value:0},
-    uColor1:{value:new THREE.Color('#203a6e')},
-    uColor2:{value:new THREE.Color('#0f1f43')},
-    uHighlight:{value:new THREE.Color('#89b4ff')}
-  },
-  vertexShader:`
-    varying vec3 vPos;
-    varying vec2 vUv;
-    void main(){
-      vPos = position;
-      vUv = uv;
-      gl_Position = projectionMatrix*modelViewMatrix*vec4(position,1.0);
-    }
-  `,
-  fragmentShader:`
-    varying vec3 vPos;
-    varying vec2 vUv;
-    uniform vec3 uColor1; uniform vec3 uColor2; uniform vec3 uHighlight;
-    float hash(vec2 p){ return fract(sin(dot(p, vec2(12.9898,78.233)))*43758.5453); }
-    void main(){
-      float lat = vUv.t; // 0..1
-      vec3 col = mix(uColor2, uColor1, smoothstep(0.1,0.9,lat));
-      // cheap dither + faint rim
-      float n = hash(vUv*800.0)*0.02;
-      float rim = smoothstep(0.0,0.25, 1.0 - abs(normalize(vPos).z));
-      col += uHighlight * rim * 0.08;
-      gl_FragColor = vec4(col + n, 1.0);
-    }
-  `
-});
-const earth = new THREE.Mesh(earthGeo, earthMat);
-scene.add(earth);
-
-/* -------------------------------------------
-   Helpers
---------------------------------------------*/
-function latLonToVec3(lat, lon, radius=R){
-  const phi = THREE.MathUtils.degToRad(90 - lat);
-  const theta = THREE.MathUtils.degToRad(lon + 180);
-  const x = -radius * Math.sin(phi) * Math.cos(theta);
-  const z =  radius * Math.sin(phi) * Math.sin(theta);
-  const y =  radius * Math.cos(phi);
-  return new THREE.Vector3(x,y,z);
-}
-
-function flyCameraTo(targetVec, distance=6, ms=1200){
-  const start = camera.position.clone();
-  const startTarget = controls.target.clone();
-  const dir = targetVec.clone().normalize();
-  const endPos = targetVec.clone().add(dir.multiplyScalar(distance));
-  const endTarget = targetVec.clone();
-
-  const t0 = performance.now();
-  function step(t){
-    const k = Math.min(1, (t - t0)/ms);
-    const s = 0.5 - 0.5*Math.cos(Math.PI*k); // ease
-    camera.position.lerpVectors(start, endPos, s);
-    controls.target.lerpVectors(startTarget, endTarget, s);
-    if (k<1) requestAnimationFrame(step);
-  }
-  requestAnimationFrame(step);
-}
-
-/* -------------------------------------------
-   Pins + labels + hover preview
---------------------------------------------*/
-const pinGroup = new THREE.Group(); scene.add(pinGroup);
-const labelLayer = document.getElementById('labels');
-
-const pinGeo = new THREE.SphereGeometry(0.035, 12, 12);
-
-const pins = steps.map((s)=>{
-  const col = colors[s.type] || new THREE.Color('#ccc');
-  const mat = new THREE.MeshBasicMaterial({ color: col });
-  const p = new THREE.Mesh(pinGeo, mat);
-  const pos = latLonToVec3(s.lat, s.lon, R+0.02);
-  p.position.copy(pos);
-  p.userData.step = s;
-  pinGroup.add(p);
-
-  // label element
-  const el = document.createElement('div');
-  el.className = 'pin-label';
-  el.textContent = s.title.split('•')[0].trim();
-  labelLayer.appendChild(el);
-
-  return { obj:p, label:el };
+/* --------------------- Map --------------------- */
+const map = L.map('map', {
+  worldCopyJump: true,               // infinite horizontal wrap
+  zoomControl: false,                // we’ll keep it clean
+  minZoom: 2, maxZoom: 18,
+  center: [20, 78], zoom: 4
 });
 
-const raycaster = new THREE.Raycaster();
-const mouse = new THREE.Vector2(-2,-2);
-addEventListener('mousemove', (e)=>{
-  const rect = renderer.domElement.getBoundingClientRect();
-  mouse.x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
-  mouse.y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
-});
+// OSM tiles (no key)
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+  attribution:'© OpenStreetMap',
+  noWrap:false
+}).addTo(map);
 
-/* hover card */
+// A subtle zoom control in bottom-right (optional)
+L.control.zoom({ position:'bottomright' }).addTo(map);
+
+/* --------------------- Pins + Hover --------------------- */
 const hover = document.getElementById('hover');
 const hoverImg = document.getElementById('hoverImg');
 const hoverTxt = document.getElementById('hoverTxt');
-let hoveredPin = null;
 
-/* -------------------------------------------
-   Flight path between consecutive steps
---------------------------------------------*/
-const flightGroup = new THREE.Group(); scene.add(flightGroup);
-let movingDot = null;
-function addFlightArc(aVec, bVec){
-  flightGroup.clear(); movingDot = null;
+const pinLayer = L.layerGroup().addTo(map);
+const markers = [];
 
-  const mid = aVec.clone().add(bVec).normalize().multiplyScalar(R*1.5);
-  const curve = new THREE.CatmullRomCurve3([aVec, mid, bVec]);
-  const tube = new THREE.TubeGeometry(curve, 120, 0.01, 8, false);
-  const mat = new THREE.MeshBasicMaterial({ color: colors.flight, transparent:true, opacity:0.9 });
-  const mesh = new THREE.Mesh(tube, mat); flightGroup.add(mesh);
+steps.forEach((s)=>{
+  const icon = L.divIcon({
+    className:'pin',
+    html:`<div style="width:14px;height:14px;border-radius:50%;background:${typeColor(s.type)};border:2px solid #0b1020;box-shadow:0 0 0 2px rgba(255,255,255,.15)"></div>`,
+    iconSize:[14,14], iconAnchor:[7,7]
+  });
+  const m = L.marker([s.lat, s.lon], { icon }).addTo(pinLayer);
+  m.step = s;
 
-  // moving dot
-  const dot = new THREE.Mesh(new THREE.SphereGeometry(0.04, 12, 12),
-                             new THREE.MeshBasicMaterial({color:0xffffff}));
-  flightGroup.add(dot);
-  movingDot = { dot, curve, t:0 };
+  m.on('mouseover', (e)=>{
+    hoverImg.src = s.preview;
+    hoverTxt.textContent = s.title;
+    hover.style.display = 'block';
+    const p = map.latLngToContainerPoint(e.latlng);
+    hover.style.left = p.x + 'px';
+    hover.style.top  = p.y + 'px';
+  });
+  m.on('mousemove', (e)=>{
+    const p = map.latLngToContainerPoint(e.latlng);
+    hover.style.left = p.x + 'px';
+    hover.style.top  = p.y + 'px';
+  });
+  m.on('mouseout', ()=>{ hover.style.display='none'; });
+
+  markers.push(m);
+});
+
+/* --------------------- Flight path + plane --------------------- */
+const flightLayer = L.layerGroup().addTo(map);
+let plane = null;
+
+function drawFlight(a, b){
+  flightLayer.clearLayers();
+  if (plane) plane.remove();
+
+  // great-circle-ish polyline by interpolating a few points
+  const pts = interpolateLatLngs(a, b, 96);
+  const path = L.polyline(pts, { color:'#8b5cf6', weight:2, opacity:0.9 }).addTo(flightLayer);
+
+  // plane marker
+  const planeIcon = L.divIcon({
+    className:'plane',
+    html:`<div style="width:10px;height:10px;border-radius:50%;background:#fff;box-shadow:0 0 10px #fff"></div>`,
+    iconSize:[10,10], iconAnchor:[5,5]
+  });
+  plane = L.marker(pts[0], { icon: planeIcon }).addTo(flightLayer);
+
+  // animate
+  let i = 0;
+  (function tick(){
+    i = (i + 1) % pts.length;
+    plane.setLatLng(pts[i]);
+    plane._icon.style.transform += ' rotate(0.0001turn)'; // force repaint on some browsers
+    plane._icon.style.transition = 'transform 40ms linear';
+    requestAnimationFrame(tick);
+  })();
 }
 
-/* -------------------------------------------
-   UI & sequencing
---------------------------------------------*/
+function interpolateLatLngs(a, b, n=64){
+  const lat1 = a.lat * Math.PI/180, lon1 = a.lng * Math.PI/180;
+  const lat2 = b.lat * Math.PI/180, lon2 = b.lng * Math.PI/180;
+  const d = 2 * Math.asin(Math.sqrt(
+      Math.sin((lat2-lat1)/2)**2 + Math.cos(lat1)*Math.cos(lat2)*Math.sin((lon2-lon1)/2)**2
+  ));
+  if (d===0) return [a,b];
+  const res = [];
+  for (let i=0;i<=n;i++){
+    const f = i/n;
+    const A = Math.sin((1-f)*d)/Math.sin(d);
+    const B = Math.sin(f*d)/Math.sin(d);
+    const x = A*Math.cos(lat1)*Math.cos(lon1) + B*Math.cos(lat2)*Math.cos(lon2);
+    const y = A*Math.cos(lat1)*Math.sin(lon1) + B*Math.cos(lat2)*Math.sin(lon2);
+    const z = A*Math.sin(lat1)               + B*Math.sin(lat2);
+    const lat = Math.atan2(z, Math.sqrt(x*x + y*y));
+    const lon = Math.atan2(y, x);
+    res.push(L.latLng(lat*180/Math.PI, lon*180/Math.PI));
+  }
+  return res;
+}
+
+/* --------------------- Sequencing --------------------- */
 const typeDot = document.getElementById('typeDot');
 const title = document.getElementById('title');
 const subtitle = document.getElementById('subtitle');
@@ -282,101 +224,34 @@ const btnPrev = document.getElementById('prev');
 const btnNext = document.getElementById('next');
 
 let idx = 0;
-function setStep(i, animate=true){
-  idx = THREE.MathUtils.clamp(i, 0, steps.length-1);
-  const s = steps[idx];
-  typeDot.style.background = cssType(s.type);
-  title.textContent = s.title;
-  subtitle.textContent = s.subtitle;
-  desc.textContent = s.desc;
-
-  const v = latLonToVec3(s.lat, s.lon, R);
-  if (animate) flyCameraTo(v, 5.8, 1200); else { controls.target.copy(v); }
-
-  // flight arc from previous step if exists
-  if (idx > 0){
-    const a = latLonToVec3(steps[idx-1].lat, steps[idx-1].lon, R);
-    const b = v.clone();
-    addFlightArc(a, b);
-  } else {
-    flightGroup.clear(); movingDot = null;
-  }
-
-  btnPrev.disabled = idx===0; btnNext.disabled = idx===steps.length-1;
-}
+setStep(0, false);
 
 btnPrev.onclick = ()=> setStep(idx-1);
 btnNext.onclick = ()=> setStep(idx+1);
 
-function cssType(t){
-  return t==='origin' ? 'var(--origin)' : t==='study' ? 'var(--study)' : 'var(--work)';
-}
+function setStep(i, animate=true){
+  idx = Math.max(0, Math.min(steps.length-1, i));
+  const s = steps[idx];
+  typeDot.style.background = typeColor(s.type);
+  title.textContent = s.title;
+  subtitle.textContent = s.subtitle;
+  desc.textContent = s.desc;
 
-/* -------------------------------------------
-   Resize
---------------------------------------------*/
-addEventListener('resize', ()=>{
-  camera.aspect = innerWidth/innerHeight;
-  camera.updateProjectionMatrix();
-  renderer.setSize(innerWidth, innerHeight, false);
-});
+  const latlng = L.latLng(s.lat, s.lon);
+  map.flyTo(latlng, 6, { duration: 1.2 });
 
-/* -------------------------------------------
-   Animation loop
---------------------------------------------*/
-function renderLabels(){
-  pins.forEach(({obj,label})=>{
-    const v = obj.position.clone().project(camera);
-    const x = (v.x * 0.5 + 0.5) * innerWidth;
-    const y = (-v.y * 0.5 + 0.5) * innerHeight;
-    label.style.left = x+'px';
-    label.style.top = y+'px';
-    // show labels only if facing camera
-    const facing = obj.position.clone().normalize().dot(camera.position.clone().normalize()) > -0.2;
-    label.style.display = facing ? 'block' : 'none';
-  });
-}
-
-function animate(t){
-  earth.rotation.y += 0.0008;
-  if (movingDot){
-    movingDot.t = (movingDot.t + 0.003) % 1;
-    const p = movingDot.curve.getPointAt(movingDot.t);
-    movingDot.dot.position.copy(p);
-  }
-
-  // raycast hover
-  raycaster.setFromCamera(mouse, camera);
-  const intersects = raycaster.intersectObjects(pinGroup.children);
-  if (intersects.length){
-    const obj = intersects[0].object;
-    const s = obj.userData.step;
-    if (hoveredPin !== obj){
-      hoveredPin = obj;
-      hoverImg.src = s.preview;
-      hoverTxt.textContent = s.title;
-      hover.style.display = 'block';
-    }
-    const sp = obj.position.clone().project(camera);
-    hover.style.left = (sp.x * 0.5 + 0.5) * innerWidth + 'px';
-    hover.style.top  = (-sp.y * 0.5 + 0.5) * innerHeight + 'px';
+  if (idx>0){
+    drawFlight(L.latLng(steps[idx-1].lat, steps[idx-1].lon), latlng);
   } else {
-    hoveredPin = null; hover.style.display = 'none';
+    flightLayer.clearLayers();
   }
 
-  controls.update();
-  renderer.render(scene, camera);
-  renderLabels();
-  requestAnimationFrame(animate);
+  btnPrev.disabled = idx===0;
+  btnNext.disabled = idx===steps.length-1;
 }
-setStep(0, false);
-requestAnimationFrame(animate);
 
-/* -------------------------------------------
-   Sample inline images (replace later)
---------------------------------------------*/
+/* --------------------- Inline placeholder images --------------------- */
 function sampleImage(n){
-  // tiny gradient placeholders; replace with your own later:
   const stops = [
     ['#0ea5e9','#1e3a8a'],
     ['#22c55e','#0f766e'],
@@ -385,22 +260,23 @@ function sampleImage(n){
     ['#ef4444','#7f1d1d'],
   ];
   const [a,b]=stops[(n-1)%stops.length];
-  // SVG data URL
   const svg = encodeURIComponent(
 `<svg xmlns='http://www.w3.org/2000/svg' width='720' height='480'>
   <defs><linearGradient id='g' x1='0' y1='0' x2='1' y2='1'>
-    <stop offset='0%' stop-color='${a}'/>
-    <stop offset='100%' stop-color='${b}'/>
-  </linearGradient></defs>
+    <stop offset='0%' stop-color='${a}'/><stop offset='100%' stop-color='${b}'/></linearGradient></defs>
   <rect width='100%' height='100%' fill='url(#g)'/>
   <circle cx='360' cy='240' r='140' fill='rgba(255,255,255,0.08)'/>
   <text x='50%' y='50%' dominant-baseline='middle' text-anchor='middle'
-        font-family='system-ui,Arial' font-size='28' fill='rgba(255,255,255,0.9)'>
-    Shreyan • Preview ${n}
-  </text>
+        font-family='system-ui,Arial' font-size='28' fill='rgba(255,255,255,0.92)'>Shreyan • Preview ${n}</text>
 </svg>`);
   return `data:image/svg+xml;charset=utf-8,${svg}`;
 }
+
+/* --------------------- Replace previews later --------------------- */
+/* Example:
+   steps[0].preview = "./images/burdwan.jpg";
+   steps[3].preview = "./images/ubuffalo-lab.jpg";
+*/
 </script>
 </body>
 </html>
