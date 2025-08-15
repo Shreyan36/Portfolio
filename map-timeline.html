@@ -117,49 +117,97 @@ window.addEventListener('load', function () {
     return L.latLngBounds(sw, ne);
   }
 
-  /* ---------- Data ---------- */
-  const steps = [
-    {
-      id:'birth', type:'origin', title:'Birth • Burdwan, India',
-      subtitle:'Starting point of the journey.',
-      desc:'Burdwan (Bardhaman), West Bengal.',
-      lat:23.2324, lon:87.8615, radiusKm:10,
-      gallery:[ imgPlaceholder('Burdwan • early roots', '#0ea5e9','#1e3a8a'),
-                imgPlaceholder('Hometown memories', '#38bdf8','#0e7490') ]
-    },
-    {
-      id:'school', type:'origin', title:'School • Burdwan, India',
-      subtitle:'Early education.',
-      desc:'Formative years and first sparks of science.',
-      lat:23.2324, lon:87.8615, radiusKm:10,
-      gallery:[ imgPlaceholder('School years • curiosity', '#22c55e','#0f766e'),
-                imgPlaceholder('First circuits & demos', '#34d399','#065f46') ]
-    },
-    {
-      id:'nit', type:'study', title:'Undergrad • NIT Durgapur',
-      subtitle:'Electronics & Communication Engineering',
-      desc:'NIT Durgapur, West Bengal, India.',
-      lat:23.5505, lon:87.2910, radiusKm:12,
-      gallery:[ imgPlaceholder('NIT Durgapur campus', '#f59e0b','#b45309'),
-                imgPlaceholder('ECE • projects', '#fbbf24','#92400e') ]
-    },
-    {
-      id:'ub', type:'study', title:'MS & PhD • University at Buffalo',
-      subtitle:'Nanophotonics & Biosensing',
-      desc:'SUNY Buffalo, New York, USA.',
-      lat:42.9990, lon:-78.7800, radiusKm:20,
-      gallery:[ imgPlaceholder('Buffalo • research', '#8b5cf6','#4c1d95'),
-                imgPlaceholder('Cleanroom & optics', '#a78bfa','#4338ca') ]
-    },
-    {
-      id:'boston', type:'work', title:'Internship • Boston, USA',
-      subtitle:'Summer at a meta‑optics company',
-      desc:'Hands‑on SEM & process analysis.',
-      lat:42.3601, lon:-71.0589, radiusKm:18,
-      gallery:[ imgPlaceholder('Boston • summer stint', '#ef4444','#7f1d1d'),
-                imgPlaceholder('Labs & city', '#fb7185','#7f1d1d') ]
-    }
-  ];
+  /* --------------------- Data (replace your current `steps` with this) --------------------- */
+const steps = [
+  {
+    id:'birth', type:'origin', title:'Birth • Burdwan, India',
+    subtitle:'Starting point of the journey',
+    desc:'Burdwan (Bardhaman), West Bengal—where curiosity and tinkering began.',
+    lat:23.2324, lon:87.8615, radiusKm:10,
+    gallery:[
+      sampleImage('Burdwan • early roots', '#0ea5e9','#1e3a8a'),
+      sampleImage('First sparks of science', '#38bdf8','#0e7490')
+    ]
+  },
+
+  {
+    id:'school', type:'origin', title:'School • Burdwan, India',
+    subtitle:'Formative years',
+    desc:'Early education; building blocks for engineering and research mindset.',
+    lat:23.2324, lon:87.8615, radiusKm:10,
+    gallery:[
+      sampleImage('School days • curiosity', '#22c55e','#0f766e'),
+      sampleImage('Hands-on learning', '#34d399','#065f46')
+    ]
+  },
+
+  {
+    id:'nit', type:'study', title:'Undergrad • NIT Durgapur',
+    subtitle:'B.Tech, Electronics & Communication (2017–2021)',
+    desc:'GPA 8.88/10. Led placement and student bodies; foundations in ECE and photonics.',
+    lat:23.5505, lon:87.2910, radiusKm:12,
+    gallery:[
+      sampleImage('NIT Durgapur campus', '#f59e0b','#b45309'),
+      sampleImage('ECE projects & leadership', '#fbbf24','#92400e')
+    ]
+  },
+
+  {
+    id:'iisc', type:'work', title:'Summer Research Intern • IISc Bangalore',
+    subtitle:'Optical comms & modulators (May–Jul 2019)',
+    desc:'Explored optical components; simulated MZMs; proposed an optical full adder (IEEE).',
+    lat:13.0210, lon:77.5670, radiusKm:14,
+    gallery:[
+      sampleImage('IISc • research summer', '#ef4444','#7f1d1d'),
+      sampleImage('Optical systems & MZMs', '#fb7185','#7f1d1d')
+    ]
+  },
+
+  {
+    id:'uky', type:'work', title:'Visiting Research Scholar • University of Kentucky',
+    subtitle:'Nanophotonic ALU (May 2020–May 2021)',
+    desc:'Modeled CMOS-integrated polymorphic ALU (14nm & 45/32nm SiP); DFM-aware architectures; ~70% latency ↓, ~30% freq ↑.',
+    lat:38.0406, lon:-84.5037, radiusKm:16,
+    gallery:[
+      sampleImage('Lexington • photonics work', '#8b5cf6','#4c1d95'),
+      sampleImage('CMOS + SiP modeling', '#a78bfa','#4338ca')
+    ]
+  },
+
+  {
+    id:'ub-ms', type:'study', title:'M.S. • University at Buffalo',
+    subtitle:'Electrical Engineering (2019–2023)',
+    desc:'GPA 3.89/4.0. Core grounding for subsequent Ph.D. research.',
+    lat:42.9990, lon:-78.7800, radiusKm:20,
+    gallery:[
+      sampleImage('Buffalo • MS journey', '#60a5fa','#1e40af'),
+      sampleImage('Labs & coursework', '#93c5fd','#1d4ed8')
+    ]
+  },
+
+  {
+    id:'ub-phd', type:'study', title:'Ph.D. • University at Buffalo',
+    subtitle:'Nanophotonics & Biosensing (Aug 2021–Jan 2026)',
+    desc:'Novel 3-step SERS fabrication (E-beam evap, RTA, liquid Ga); >85% cost ↓ vs lithography; >100× Raman enhancement; SEM/EDS/FTIR/AFM/UV-Vis validation.',
+    lat:42.9990, lon:-78.7800, radiusKm:20,
+    gallery:[
+      sampleImage('SERS sensors • research', '#14b8a6','#0f766e'),
+      sampleImage('Characterization & results', '#2dd4bf','#115e59')
+    ]
+  },
+
+  {
+    id:'metalenz', type:'work', title:'SEM Imaging & Process Intern • Boston, USA',
+    subtitle:'Meta-optics internship (May–Aug 2025)',
+    desc:'Built SEM image-processing pipelines; 96–98.5% feature accuracy; 500+ images at ~1.36 min/image; DOE & SPC; cross-team feedback loop with ~30% faster insights.',
+    lat:42.3601, lon:-71.0589, radiusKm:18,
+    gallery:[
+      sampleImage('Boston • internship', '#ef4444','#7f1d1d'),
+      sampleImage('SEM workflows & DOE', '#fb7185','#7f1d1d')
+    ]
+  }
+];
+
   const typeColor = t => t==='origin' ? '#14b8a6' : t==='study' ? '#60a5fa' : '#f59e0b';
 
   /* ---------- Map ---------- */
