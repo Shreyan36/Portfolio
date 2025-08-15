@@ -5,45 +5,62 @@
 <meta name="viewport" content="width=device-width,initial-scale=1" />
 <title>Shreyan • Map Timeline</title>
 
-<!-- Leaflet (no API key) -->
+<!-- Leaflet -->
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
 <style>
   :root{
-    --bg:#0b1020; --panel:#0f162b; --panel2:#0c1426; --text:#e5e7eb; --muted:#a8b3cf;
-    --origin:#14b8a6; --study:#60a5fa; --work:#f59e0b; --flight:#8b5cf6; --accent:#8b5cf6;
+    --bg:#0b1020; --panel:#0f162b; --text:#e5e7eb; --muted:#a8b3cf;
+    --origin:#14b8a6; --study:#60a5fa; --work:#f59e0b; --flight:#8b5cf6;
+    --accent:#8b5cf6; --btn:#1b2442;
   }
-  *{box-sizing:border-box} html,body{height:100%;margin:0;background:var(--bg);color:var(--text);
+  *{box-sizing:border-box}
+  html,body{height:100%;margin:0;background:var(--bg);color:var(--text);
     font:14px/1.45 system-ui, -apple-system, "Segoe UI", Roboto, Inter, Arial}
   #map{position:fixed; inset:0}
-  .legend{position:fixed; top:12px; right:12px; z-index:5000; display:flex; gap:12px; background:rgba(15,22,43,.65);
-    border:1px solid rgba(255,255,255,.08); padding:8px 12px; border-radius:14px; backdrop-filter: blur(8px)}
+
+  /* Legend */
+  .legend{position:fixed; top:12px; right:12px; z-index:5000; display:flex; gap:12px;
+    background:rgba(15,22,43,.65); border:1px solid rgba(255,255,255,.08);
+    padding:8px 12px; border-radius:14px; backdrop-filter:blur(8px)}
   .lg{display:flex; align-items:center; gap:6px; color:var(--muted)}
   .dot{width:8px; height:8px; border-radius:50%}
-  .card{position:fixed; left:16px; bottom:16px; z-index:5000; width:min(560px, calc(100% - 32px)); background:rgba(15,22,43,.85);
-        border:1px solid rgba(255,255,255,.06); border-radius:16px; padding:16px; backdrop-filter: blur(8px)}
-  .row{display:flex; align-items:center; gap:8px; margin-bottom:6px}
-  .h{font-weight:700; margin:0}
-  .t{color:#cfe0ff; margin:4px 0 8px}
-  .d{color:var(--muted)}
-  .controls{display:flex; gap:10px; margin-top:10px}
-  .btn{background:#1b2442; color:#e6eaff; border:1px solid rgba(255,255,255,.08); padding:8px 14px; border-radius:12px; cursor:pointer}
-  .btn.primary{background:linear-gradient(135deg,#6d28d9,#8b5cf6); border:0}
-  .btn:disabled{opacity:.5; cursor:not-allowed}
 
-  /* hover preview */
-  .hover{position:fixed; z-index:6000; display:none; width:240px; transform:translate(-50%,-120%);
-         background:rgba(15,22,43,.95); border:1px solid rgba(255,255,255,.08); border-radius:12px; overflow:hidden;
-         box-shadow:0 12px 36px rgba(0,0,0,.45)}
-  .hover img{display:block; width:100%; height:140px; object-fit:cover}
-  .hover .hx{padding:8px 10px; color:#dbe7ff}
-  a,a:visited{color:#c6b4ff}
+  /* Bottom card */
+  .card{position:fixed;left:16px;bottom:16px;z-index:5000;width:min(560px,calc(100% - 32px));
+        background:rgba(15,22,43,.85);border:1px solid rgba(255,255,255,.06);border-radius:16px;
+        padding:16px;backdrop-filter:blur(8px)}
+  .row{display:flex;align-items:center;gap:8px;margin-bottom:6px}
+  .h{font-weight:700;margin:0}
+  .t{color:#cfe0ff;margin:4px 0 8px}
+  .d{color:var(--muted)}
+  .controls{display:flex;gap:10px;margin-top:10px}
+  .btn{background:var(--btn);color:#e6eaff;border:1px solid rgba(255,255,255,.08);
+       padding:8px 14px;border-radius:12px;cursor:pointer}
+  .btn.primary{background:linear-gradient(135deg,#6d28d9,#8b5cf6);border:0}
+  .btn:disabled{opacity:.5;cursor:not-allowed}
+
+  /* Gallery popup (≈4x bigger than before) */
+  .gallery{position:fixed;z-index:6000;display:none;width:min(960px,96vw);
+           background:rgba(15,22,43,.98);border:1px solid rgba(255,255,255,.1);
+           border-radius:16px;overflow:hidden;box-shadow:0 18px 60px rgba(0,0,0,.55)}
+  .galleryHeader{display:flex;align-items:center;justify-content:space-between;
+                 padding:10px 14px;border-bottom:1px solid rgba(255,255,255,.08)}
+  .galleryTitle{font-weight:600}
+  .galleryClose{cursor:pointer;background:transparent;border:0;color:#fff;font-size:20px}
+  .galleryViewport{position:relative;width:100%;height:min(560px,60vh);background:#0a0f1e}
+  .galleryImg{position:absolute;inset:0;display:none;width:100%;height:100%;object-fit:cover}
+  .galleryImg.active{display:block}
+  .navBtn{position:absolute;top:50%;transform:translateY(-50%);background:rgba(0,0,0,.45);
+          border:1px solid rgba(255,255,255,.2);color:#fff;border-radius:10px;padding:8px 10px;cursor:pointer}
+  .navPrev{left:10px} .navNext{right:10px}
+  .galleryCaption{padding:10px 14px;color:#dbe7ff;border-top:1px solid rgba(255,255,255,.08)}
 </style>
 </head>
 <body>
 
-<div id="map" aria-label="Infinite scrolling map timeline"></div>
+<div id="map" aria-label="Satellite map timeline"></div>
 
 <!-- legend -->
 <div class="legend">
@@ -60,17 +77,25 @@
     <div id="title" class="h">Birth • Burdwan, India</div>
   </div>
   <div id="subtitle" class="t">Starting point of the journey.</div>
-  <div id="desc" class="d">Use Next to follow the path.</div>
+  <div id="desc" class="d">Use Next to follow the path. Hover a pin to open gallery.</div>
   <div class="controls">
     <button id="prev" class="btn">Prev</button>
     <button id="next" class="btn primary">Next</button>
   </div>
 </div>
 
-<!-- hover preview -->
-<div id="hover" class="hover">
-  <img id="hoverImg" alt="">
-  <div id="hoverTxt" class="hx"></div>
+<!-- big gallery popup -->
+<div id="gallery" class="gallery" role="dialog" aria-modal="true">
+  <div class="galleryHeader">
+    <div class="galleryTitle" id="gTitle">Location</div>
+    <button class="galleryClose" id="gClose" aria-label="Close">×</button>
+  </div>
+  <div class="galleryViewport" id="gViewport">
+    <!-- images injected -->
+    <button class="navBtn navPrev" id="gPrev" aria-label="Previous">‹</button>
+    <button class="navBtn navNext" id="gNext" aria-label="Next">›</button>
+  </div>
+  <div class="galleryCaption" id="gCaption">Caption</div>
 </div>
 
 <script>
@@ -80,120 +105,220 @@ const steps = [
     id:'birth', type:'origin', title:'Birth • Burdwan, India',
     subtitle:'Starting point of the journey.',
     desc:'Burdwan (Bardhaman), West Bengal.',
-    lat:23.2324, lon:87.8615, preview: sampleImage(1)
+    lat:23.2324, lon:87.8615,
+    gallery:[
+      sampleImage('Burdwan • early roots', '#0ea5e9','#1e3a8a'),
+      sampleImage('Hometown memories', '#38bdf8','#0e7490')
+    ]
   },
   {
     id:'school', type:'origin', title:'School • Burdwan, India',
     subtitle:'Early education.',
     desc:'Formative years and first sparks of science.',
-    lat:23.2324, lon:87.8615, preview: sampleImage(2)
+    lat:23.2324, lon:87.8615,
+    gallery:[
+      sampleImage('School years • curiosity', '#22c55e','#0f766e'),
+      sampleImage('First circuits & demos', '#34d399','#065f46')
+    ]
   },
   {
     id:'nit', type:'study', title:'Undergrad • NIT Durgapur',
     subtitle:'Electronics & Communication Engineering',
     desc:'NIT Durgapur, West Bengal, India.',
-    lat:23.5505, lon:87.291, preview: sampleImage(3)
+    lat:23.5505, lon:87.291,
+    gallery:[
+      sampleImage('NIT Durgapur campus', '#f59e0b','#b45309'),
+      sampleImage('ECE • projects', '#fbbf24','#92400e')
+    ]
   },
   {
     id:'ub', type:'study', title:'MS & PhD • University at Buffalo',
     subtitle:'Nanophotonics & Biosensing',
     desc:'SUNY Buffalo, New York, USA.',
-    lat:42.999, lon:-78.78, preview: sampleImage(4)
+    lat:42.999, lon:-78.78,
+    gallery:[
+      sampleImage('Buffalo • research', '#8b5cf6','#4c1d95'),
+      sampleImage('Cleanroom & optics', '#a78bfa','#4338ca')
+    ]
   },
   {
     id:'boston', type:'work', title:'Internship • Boston, USA',
     subtitle:'Summer at a meta-optics company',
     desc:'Hands-on SEM imaging and process analysis.',
-    lat:42.3601, lon:-71.0589, preview: sampleImage(5)
+    lat:42.3601, lon:-71.0589,
+    gallery:[
+      sampleImage('Boston • summer stint', '#ef4444','#7f1d1d'),
+      sampleImage('Labs & city', '#fb7185','#7f1d1d')
+    ]
   }
 ];
 
 const typeColor = (t)=> t==='origin' ? '#14b8a6' : t==='study' ? '#60a5fa' : '#f59e0b';
 
-/* --------------------- Map --------------------- */
+/* --------------------- Map (Satellite, no labels) --------------------- */
 const map = L.map('map', {
-  worldCopyJump: true,               // infinite horizontal wrap
-  zoomControl: false,                // we’ll keep it clean
+  worldCopyJump: true,
+  zoomControl: false,
   minZoom: 2, maxZoom: 18,
   center: [20, 78], zoom: 4
 });
 
-// OSM tiles (no key)
-L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-  attribution:'© OpenStreetMap',
-  noWrap:false
-}).addTo(map);
+// Esri WorldImagery (satellite imagery, practically no labels)
+L.tileLayer(
+  'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
+  { attribution: 'Tiles © Esri — Source: Esri, Maxar, Earthstar Geographics, and the GIS User Community' }
+).addTo(map);
 
-// A subtle zoom control in bottom-right (optional)
 L.control.zoom({ position:'bottomright' }).addTo(map);
 
-/* --------------------- Pins + Hover --------------------- */
-const hover = document.getElementById('hover');
-const hoverImg = document.getElementById('hoverImg');
-const hoverTxt = document.getElementById('hoverTxt');
-
+/* --------------------- Pins + “hover to open gallery” --------------------- */
 const pinLayer = L.layerGroup().addTo(map);
 const markers = [];
 
 steps.forEach((s)=>{
   const icon = L.divIcon({
     className:'pin',
-    html:`<div style="width:14px;height:14px;border-radius:50%;background:${typeColor(s.type)};border:2px solid #0b1020;box-shadow:0 0 0 2px rgba(255,255,255,.15)"></div>`,
-    iconSize:[14,14], iconAnchor:[7,7]
+    html:`<div style="width:16px;height:16px;border-radius:50%;background:${typeColor(s.type)};border:2px solid #0b1020;box-shadow:0 0 0 2px rgba(255,255,255,.18)"></div>`,
+    iconSize:[16,16], iconAnchor:[8,8]
   });
   const m = L.marker([s.lat, s.lon], { icon }).addTo(pinLayer);
   m.step = s;
 
+  // Open big gallery on hover (with slight delay to avoid accidental opens)
+  let hoverTimer=null;
   m.on('mouseover', (e)=>{
-    hoverImg.src = s.preview;
-    hoverTxt.textContent = s.title;
-    hover.style.display = 'block';
-    const p = map.latLngToContainerPoint(e.latlng);
-    hover.style.left = p.x + 'px';
-    hover.style.top  = p.y + 'px';
+    hoverTimer = setTimeout(()=> openGallery(s, e.latlng), 120);
   });
-  m.on('mousemove', (e)=>{
-    const p = map.latLngToContainerPoint(e.latlng);
-    hover.style.left = p.x + 'px';
-    hover.style.top  = p.y + 'px';
+  m.on('mouseout', ()=>{
+    if (hoverTimer){ clearTimeout(hoverTimer); hoverTimer=null; }
+    // don't close immediately; gallery has its own close button
   });
-  m.on('mouseout', ()=>{ hover.style.display='none'; });
 
   markers.push(m);
 });
 
-/* --------------------- Flight path + plane --------------------- */
+/* --------------------- Flight path + airplane (slower) --------------------- */
 const flightLayer = L.layerGroup().addTo(map);
-let plane = null;
+let plane = null, anim=null;
 
 function drawFlight(a, b){
   flightLayer.clearLayers();
-  if (plane) plane.remove();
+  if (plane) { plane.remove(); plane=null; }
+  if (anim) { cancelAnimationFrame(anim); anim=null; }
 
-  // great-circle-ish polyline by interpolating a few points
-  const pts = interpolateLatLngs(a, b, 96);
+  const pts = interpolateLatLngs(a, b, 240); // more points -> smoother & slower
   const path = L.polyline(pts, { color:'#8b5cf6', weight:2, opacity:0.9 }).addTo(flightLayer);
 
-  // plane marker
+  // Airplane icon (SVG)
   const planeIcon = L.divIcon({
     className:'plane',
-    html:`<div style="width:10px;height:10px;border-radius:50%;background:#fff;box-shadow:0 0 10px #fff"></div>`,
-    iconSize:[10,10], iconAnchor:[5,5]
+    html:`<svg width="20" height="20" viewBox="0 0 24 24" fill="#fff" style="filter:drop-shadow(0 0 6px rgba(255,255,255,.8))">
+            <path d="M2 12l8 2 8 8 2-2-8-8 2-8-2-2-8 8-2 2z"/>
+          </svg>`,
+    iconSize:[20,20], iconAnchor:[10,10]
   });
-  plane = L.marker(pts[0], { icon: planeIcon }).addTo(flightLayer);
+  plane = L.marker(pts[0], { icon: planeIcon, zIndexOffset:1000 }).addTo(flightLayer);
 
-  // animate
   let i = 0;
-  (function tick(){
+  const step = ()=>{
     i = (i + 1) % pts.length;
-    plane.setLatLng(pts[i]);
-    plane._icon.style.transform += ' rotate(0.0001turn)'; // force repaint on some browsers
-    plane._icon.style.transition = 'transform 40ms linear';
-    requestAnimationFrame(tick);
-  })();
+    const curr = pts[i], prev = pts[(i-1+pts.length)%pts.length];
+    plane.setLatLng(curr);
+
+    // compute bearing for rotation
+    const brg = bearing(prev.lat, prev.lng, curr.lat, curr.lng);
+    if (plane._icon){
+      plane._icon.style.transform = `rotate(${brg}deg)`;
+    }
+    anim = requestAnimationFrame(step);
+  };
+  anim = requestAnimationFrame(step);
 }
 
-function interpolateLatLngs(a, b, n=64){
+/* --------------------- Sequencing --------------------- */
+const typeDot = document.getElementById('typeDot');
+const title = document.getElementById('title');
+const subtitle = document.getElementById('subtitle');
+const desc = document.getElementById('desc');
+const btnPrev = document.getElementById('prev');
+const btnNext = document.getElementById('next');
+
+let idx = 0;
+setStep(0);
+
+btnPrev.onclick = ()=> setStep(idx-1);
+btnNext.onclick = ()=> setStep(idx+1);
+
+function setStep(i){
+  idx = Math.max(0, Math.min(steps.length-1, i));
+  const s = steps[idx];
+  typeDot.style.background = typeColor(s.type);
+  title.textContent = s.title;
+  subtitle.textContent = s.subtitle;
+  desc.textContent = s.desc;
+  const latlng = L.latLng(s.lat, s.lon);
+  map.flyTo(latlng, 6, { duration: 1.4 });
+  if (idx>0){
+    drawFlight(L.latLng(steps[idx-1].lat, steps[idx-1].lon), latlng);
+  } else {
+    flightLayer.clearLayers();
+  }
+  btnPrev.disabled = idx===0;
+  btnNext.disabled = idx===steps.length-1;
+}
+
+/* --------------------- Gallery logic --------------------- */
+const gallery = document.getElementById('gallery');
+const gTitle = document.getElementById('gTitle');
+const gCaption = document.getElementById('gCaption');
+const gViewport = document.getElementById('gViewport');
+const gPrev = document.getElementById('gPrev');
+const gNext = document.getElementById('gNext');
+const gClose = document.getElementById('gClose');
+
+let gImgs = [], gIndex = 0;
+
+function openGallery(step, latlng){
+  // position gallery near top-left of the marker, but keep on-screen
+  const p = map.latLngToContainerPoint(latlng);
+  const W = Math.min(960, window.innerWidth*0.96);
+  const H = Math.min(560, window.innerHeight*0.60);
+  gallery.style.width = W+'px';
+  gallery.style.left = Math.min(Math.max(12, p.x - W/2), window.innerWidth - W - 12) + 'px';
+  gallery.style.top  = Math.min(Math.max(12, p.y - H - 24), window.innerHeight - H - 24) + 'px';
+
+  // build images
+  gTitle.textContent = step.title;
+  gImgs = step.gallery.slice();
+  gIndex = 0;
+
+  gViewport.querySelectorAll('img.galleryImg').forEach(n=>n.remove());
+  gImgs.forEach((src, i)=>{
+    const im = document.createElement('img');
+    im.className = 'galleryImg' + (i===0 ? ' active':'');
+    im.src = src;
+    im.alt = step.title + ' • ' + (i+1);
+    gViewport.appendChild(im);
+  });
+  updateCaption(step);
+
+  gallery.style.display='block';
+}
+
+function updateCaption(step){
+  gCaption.textContent = step.subtitle + (gImgs.length>1 ? `  •  ${gIndex+1}/${gImgs.length}`:'');
+  const all = [...gViewport.querySelectorAll('img.galleryImg')];
+  all.forEach((im, i)=> im.classList.toggle('active', i===gIndex));
+}
+
+gPrev.onclick = ()=> { if (!gImgs.length) return; gIndex = (gIndex-1+gImgs.length)%gImgs.length; updateCaption(currentStep()); };
+gNext.onclick = ()=> { if (!gImgs.length) return; gIndex = (gIndex+1)%gImgs.length; updateCaption(currentStep()); };
+gClose.onclick = ()=> { gallery.style.display='none'; };
+
+function currentStep(){ return steps[idx]; }
+
+/* --------------------- Helpers --------------------- */
+function interpolateLatLngs(a, b, n=200){
   const lat1 = a.lat * Math.PI/180, lon1 = a.lng * Math.PI/180;
   const lat2 = b.lat * Math.PI/180, lon2 = b.lng * Math.PI/180;
   const d = 2 * Math.asin(Math.sqrt(
@@ -215,68 +340,31 @@ function interpolateLatLngs(a, b, n=64){
   return res;
 }
 
-/* --------------------- Sequencing --------------------- */
-const typeDot = document.getElementById('typeDot');
-const title = document.getElementById('title');
-const subtitle = document.getElementById('subtitle');
-const desc = document.getElementById('desc');
-const btnPrev = document.getElementById('prev');
-const btnNext = document.getElementById('next');
-
-let idx = 0;
-setStep(0, false);
-
-btnPrev.onclick = ()=> setStep(idx-1);
-btnNext.onclick = ()=> setStep(idx+1);
-
-function setStep(i, animate=true){
-  idx = Math.max(0, Math.min(steps.length-1, i));
-  const s = steps[idx];
-  typeDot.style.background = typeColor(s.type);
-  title.textContent = s.title;
-  subtitle.textContent = s.subtitle;
-  desc.textContent = s.desc;
-
-  const latlng = L.latLng(s.lat, s.lon);
-  map.flyTo(latlng, 6, { duration: 1.2 });
-
-  if (idx>0){
-    drawFlight(L.latLng(steps[idx-1].lat, steps[idx-1].lon), latlng);
-  } else {
-    flightLayer.clearLayers();
-  }
-
-  btnPrev.disabled = idx===0;
-  btnNext.disabled = idx===steps.length-1;
+function bearing(lat1, lon1, lat2, lon2){
+  const φ1 = lat1*Math.PI/180, φ2 = lat2*Math.PI/180;
+  const Δλ = (lon2-lon1)*Math.PI/180;
+  const y = Math.sin(Δλ)*Math.cos(φ2);
+  const x = Math.cos(φ1)*Math.sin(φ2) - Math.sin(φ1)*Math.cos(φ2)*Math.cos(Δλ);
+  const θ = Math.atan2(y, x);
+  return (θ*180/Math.PI + 360) % 360;
 }
 
-/* --------------------- Inline placeholder images --------------------- */
-function sampleImage(n){
-  const stops = [
-    ['#0ea5e9','#1e3a8a'],
-    ['#22c55e','#0f766e'],
-    ['#f59e0b','#b45309'],
-    ['#8b5cf6','#4c1d95'],
-    ['#ef4444','#7f1d1d'],
-  ];
-  const [a,b]=stops[(n-1)%stops.length];
+/* Inline placeholder images: replace with real file paths later
+   Example:
+   steps[0].gallery = ["./images/burdwan-1.jpg","./images/burdwan-2.jpg"];
+*/
+function sampleImage(label, a,b){
   const svg = encodeURIComponent(
-`<svg xmlns='http://www.w3.org/2000/svg' width='720' height='480'>
+`<svg xmlns='http://www.w3.org/2000/svg' width='1600' height='900'>
   <defs><linearGradient id='g' x1='0' y1='0' x2='1' y2='1'>
     <stop offset='0%' stop-color='${a}'/><stop offset='100%' stop-color='${b}'/></linearGradient></defs>
   <rect width='100%' height='100%' fill='url(#g)'/>
-  <circle cx='360' cy='240' r='140' fill='rgba(255,255,255,0.08)'/>
+  <g opacity='.08'><circle cx='800' cy='450' r='230' fill='#fff'/></g>
   <text x='50%' y='50%' dominant-baseline='middle' text-anchor='middle'
-        font-family='system-ui,Arial' font-size='28' fill='rgba(255,255,255,0.92)'>Shreyan • Preview ${n}</text>
+        font-family='system-ui,Arial' font-size='46' fill='rgba(255,255,255,0.95)'>${label}</text>
 </svg>`);
   return `data:image/svg+xml;charset=utf-8,${svg}`;
 }
-
-/* --------------------- Replace previews later --------------------- */
-/* Example:
-   steps[0].preview = "./images/burdwan.jpg";
-   steps[3].preview = "./images/ubuffalo-lab.jpg";
-*/
 </script>
 </body>
 </html>
