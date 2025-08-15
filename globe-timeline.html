@@ -9,7 +9,9 @@
   *{box-sizing:border-box}html,body{height:100%}
   body{margin:0;background:#0b0f17;color:#e5e7eb;font-family:system-ui,-apple-system,Inter,Segoe UI,Roboto,Arial;overflow:hidden}
   #scene{position:fixed;inset:0;z-index:0}
-  .panel{position:fixed;left:24px;bottom:24px;z-index:2;width:min(620px,calc(100% - 48px));
+
+  /* Info panel */
+  .panel{position:fixed;left:24px;bottom:24px;z-index:3;width:min(620px,calc(100% - 48px));
     background:rgba(14,22,38,.86);border:1px solid rgba(79,70,229,.25);border-radius:16px;padding:18px 16px 14px;backdrop-filter:blur(14px)}
   .big{font-size:20px;color:#fff;margin:6px 0 2px;font-weight:700}
   .step{margin-top:4px;font-size:14px;color:var(--muted)}
@@ -19,11 +21,39 @@
   button{all:unset;cursor:pointer;border-radius:12px;font-weight:700;font-size:14px;padding:10px 14px;color:#fff;background:linear-gradient(135deg,#4f46e5,#7e22ce)}
   button.secondary{background:transparent;color:#e5e7eb;border:1px solid rgba(148,163,184,.28)}
   button:disabled{opacity:.5;cursor:not-allowed}
+
+  /* Loading overlay */
+  .loading{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;z-index:2;
+    background:radial-gradient(1200px 600px at 50% -10%, rgba(79,70,229,.12), transparent 60%)}
+  .spinner{width:44px;height:44px;border-radius:50%;border:4px solid rgba(255,255,255,.18);border-top-color:#7c3aed;animation:spin 1s linear infinite}
+  .loading p{margin-top:12px;color:#c7d2fe;font-weight:600;font-size:14px}
+  @keyframes spin{to{transform:rotate(360deg)}}
+
+  /* Hover image card */
+  #hoverCard{position:fixed;z-index:4;pointer-events:none;display:none;
+    background:rgba(13,19,33,.96);border:1px solid rgba(124,58,237,.35);border-radius:12px;overflow:hidden;box-shadow:0 10px 30px rgba(0,0,0,.45)}
+  #hoverCard img{display:block;width:280px;height:180px;object-fit:cover}
+  #hoverCard .cap{padding:8px 10px;font-size:12px;color:#cbd5e1}
 </style>
 </head>
 <body>
 <div id="scene"></div>
 
+<!-- Loading -->
+<div class="loading" id="loading">
+  <div>
+    <div class="spinner" style="margin:auto"></div>
+    <p style="text-align:center">Loading globe…</p>
+  </div>
+</div>
+
+<!-- Hover Image -->
+<div id="hoverCard">
+  <img id="hoverImg" alt=""/>
+  <div class="cap" id="hoverCap"></div>
+</div>
+
+<!-- Info panel -->
 <div class="panel">
   <div class="big" id="headline">Birth • Burdwan, India</div>
   <div class="step" id="copy">Starting point of the journey.</div>
@@ -37,12 +67,13 @@
 </div>
 
 <script type="module">
-import * as THREE from 'https://unpkg.com/three@0.159.0/build/three.module.js?v=2';
-import { OrbitControls } from 'https://unpkg.com/three@0.159.0/examples/jsm/controls/OrbitControls.js?v=2';
+import * as THREE from 'https://unpkg.com/three@0.159.0/build/three.module.js?v=3';
+import { OrbitControls } from 'https://unpkg.com/three@0.159.0/examples/jsm/controls/OrbitControls.js?v=3';
 
 const R = 1;
 const scene = new THREE.Scene();
-scene.fog = new THREE.FogExp2(0x06080d, 0.12);
+// Remove heavy fog that was hiding the globe. If you want a hint of haze, set 0.008–0.015 instead.
+// scene.fog = new THREE.FogExp2(0x06080d, 0.012);
 
 const renderer = new THREE.WebGLRenderer({ antialias:true, alpha:true });
 renderer.setSize(window.innerWidth, window.innerHeight);
@@ -60,39 +91,42 @@ controls.maxDistance = 6;
 controls.autoRotate = true;
 controls.autoRotateSpeed = 0.4;
 
-// Lights
+// Lights (extra ambient so globe is visible even before textures finish)
+scene.add(new THREE.AmbientLight(0xffffff, 0.35));
 scene.add(new THREE.HemisphereLight(0xbfd4ff, 0x0b0f17, 1.0));
 const dl = new THREE.DirectionalLight(0xffffff, 1.0);
 dl.position.set(5,3,2);
 scene.add(dl);
 
-// Stars
+// Subtle star field
 const starsGeo = new THREE.BufferGeometry();
-const starCount = 1400;
+const starCount = 1200;
 const positions = new Float32Array(starCount*3);
 for (let i=0;i<starCount;i++){
-  const r=40+Math.random()*40, th=Math.random()*Math.PI*2, ph=Math.acos(Math.random()*2-1);
+  const r=38+Math.random()*36, th=Math.random()*Math.PI*2, ph=Math.acos(Math.random()*2-1);
   positions[i*3]=r*Math.sin(ph)*Math.cos(th);
   positions[i*3+1]=r*Math.cos(ph);
   positions[i*3+2]=r*Math.sin(ph)*Math.sin(th);
 }
 starsGeo.setAttribute('position', new THREE.BufferAttribute(positions,3));
-scene.add(new THREE.Points(starsGeo, new THREE.PointsMaterial({color:0x98a2b3,size:0.1,opacity:0.7,transparent:true})));
+scene.add(new THREE.Points(starsGeo, new THREE.PointsMaterial({color:0x98a2b3,size:0.12,opacity:0.7,transparent:true})));
 
-// Earth (CORS-safe textures; falls back gracefully if blocked)
+// Earth
 const loader = new THREE.TextureLoader();
 loader.setCrossOrigin('anonymous');
-const earthMat = new THREE.MeshPhongMaterial({ color:0x1b3a6b, specular:new THREE.Color("#222"), shininess:12 });
+let assetsLoaded = 0;
+const done = () => { assetsLoaded++; if (assetsLoaded >= 1) hideLoaderSoon(); }; // At least the diffuse is enough
 
-loader.load('https://planet-texture-maps.s3.us-east-2.amazonaws.com/earthmap4k.jpg',
-  tex => { earthMat.map=tex; earthMat.needsUpdate=true; },
+const earthMat = new THREE.MeshPhongMaterial({ color:0x1b3a6b, specular:new THREE.Color("#222"), shininess:12 });
+loader.load(
+  'https://planet-texture-maps.s3.us-east-2.amazonaws.com/earthmap4k.jpg',
+  tex => { earthMat.map=tex; earthMat.needsUpdate=true; done(); },
   undefined,
-  () => console.warn('Diffuse texture failed; using solid color.')
+  () => { console.warn('Diffuse texture failed; using solid color.'); hideLoaderSoon(); }
 );
-loader.load('https://planet-texture-maps.s3.us-east-2.amazonaws.com/earthbump4k.jpg',
+loader.load(
+  'https://planet-texture-maps.s3.us-east-2.amazonaws.com/earthbump4k.jpg',
   tex => { earthMat.bumpMap=tex; earthMat.bumpScale=0.02; earthMat.needsUpdate=true; },
-  undefined,
-  () => {}
 );
 
 const earthGroup = new THREE.Group();
@@ -101,13 +135,20 @@ scene.add(earthGroup);
 const earth = new THREE.Mesh(new THREE.SphereGeometry(R, 96, 96), earthMat);
 earthGroup.add(earth);
 
+// Always-visible wireframe fallback
+const wire = new THREE.Mesh(
+  new THREE.SphereGeometry(R*1.001, 32, 32),
+  new THREE.MeshBasicMaterial({ color: 0x64748b, wireframe: true, transparent: true, opacity: 0.35 })
+);
+earthGroup.add(wire);
+
 const atmosphere = new THREE.Mesh(
   new THREE.SphereGeometry(R*1.02,64,64),
   new THREE.MeshBasicMaterial({color:0x7c3aed, transparent:true, opacity:.1, blending:THREE.AdditiveBlending})
 );
 earthGroup.add(atmosphere);
 
-// Math helpers
+// Helpers
 const deg2rad = d => d * Math.PI / 180;
 function latLngToVec3(lat, lng, radius=R){
   const phi=deg2rad(90-lat), theta=deg2rad(lng+180);
@@ -119,14 +160,18 @@ function latLngToVec3(lat, lng, radius=R){
 }
 function makePin(color){
   const g=new THREE.Group();
+  const pick=new THREE.Mesh(new THREE.SphereGeometry(0.04,12,12), new THREE.MeshBasicMaterial({ visible:false })); // invisible pick area
   const orb=new THREE.Mesh(new THREE.SphereGeometry(0.015,16,16), new THREE.MeshStandardMaterial({color, emissive:color, emissiveIntensity:.6}));
   const cone=new THREE.Mesh(new THREE.ConeGeometry(0.012,0.05,12), new THREE.MeshStandardMaterial({color, emissive:color, emissiveIntensity:.35}));
-  cone.rotation.x=Math.PI; cone.position.y=0.04; g.add(orb,cone); return g;
+  cone.rotation.x=Math.PI; cone.position.y=0.04; g.add(pick,orb,cone);
+  g.userData.pick = pick;
+  return g;
 }
-function placePin(lat,lng,type="study"){
+function placePin(lat,lng,type="study", meta={}){
   const colors={home:0x10b981,study:0x22d3ee,work:0xf472b6,personal:0x22d3ee};
   const p=makePin(colors[type]||0x22d3ee);
   const pos=latLngToVec3(lat,lng,R+0.02); p.position.copy(pos); p.lookAt(pos.clone().multiplyScalar(2));
+  p.userData.meta = meta; // {label, image, caption}
   earthGroup.add(p); return p;
 }
 function greatCircleCurve(a,b,c,d,alt=0.35,segs=140){
@@ -144,29 +189,34 @@ function makePlane(color=0xf59e0b){
   body.rotation.x=Math.PI/2; const wing=new THREE.Mesh(new THREE.BoxGeometry(0.04,0.003,0.01), new THREE.MeshStandardMaterial({color})); g.add(body,wing); return g;
 }
 
-// Steps (your journey)
+// Steps (with pin images – replace these URLs later)
 const steps = [
   { key:"birth", headline:"Birth • Burdwan, India", copy:"Born in Burdwan, West Bengal, India.", tags:["Personal","Origin"],
     focus:{lat:23.2324,lng:87.8615,dist:2.3,tilt:.2},
-    pins:[{lat:23.2324,lng:87.8615,type:"personal",label:"Burdwan"}]
+    pins:[{lat:23.2324,lng:87.8615,type:"personal",label:"Burdwan",
+      image:"https://picsum.photos/seed/burdwan/640/420", caption:"Burdwan, West Bengal"}]
   },
   { key:"school", headline:"Schooling • Burdwan, India", copy:"Completed primary and secondary schooling in Burdwan, excelling in science and mathematics.", tags:["School","Education"],
     focus:{lat:23.2324,lng:87.8615,dist:2.3,tilt:.2},
-    pins:[{lat:23.2324,lng:87.8615,type:"study",label:"Burdwan"}]
+    pins:[{lat:23.2324,lng:87.8615,type:"study",label:"Schooling",
+      image:"https://picsum.photos/seed/school/640/420", caption:"Early schooling years"}]
   },
   { key:"undergrad", headline:"Undergraduate Studies • NIT Durgapur", copy:"Electronics and Communication Engineering at NIT Durgapur.", tags:["NIT","ECE","Undergraduate"],
     focus:{lat:23.5505,lng:87.2915,dist:2.3,tilt:.2},
-    pins:[{lat:23.5505,lng:87.2915,type:"study",label:"NIT Durgapur"}],
+    pins:[{lat:23.5505,lng:87.2915,type:"study",label:"NIT Durgapur",
+      image:"https://picsum.photos/seed/nit/640/420", caption:"NIT Durgapur campus"}],
     action:{type:"flight",from:{lat:23.2324,lng:87.8615,label:"Burdwan"},to:{lat:23.5505,lng:87.2915,label:"NIT Durgapur"}}
   },
   { key:"grad", headline:"Graduate Studies • University at Buffalo", copy:"Masters and PhD in Electrical Engineering at UB, specializing in nanophotonics and biosensing.", tags:["UB","Masters","PhD","USA"],
     focus:{lat:42.8864,lng:-78.8784,dist:2.3,tilt:.2},
-    pins:[{lat:42.8864,lng:-78.8784,type:"study",label:"Buffalo"}],
+    pins:[{lat:42.8864,lng:-78.8784,type:"study",label:"Buffalo",
+      image:"https://picsum.photos/seed/ub/640/420", caption:"University at Buffalo"}],
     action:{type:"flight",from:{lat:22.5726,lng:88.3639,label:"Kolkata"},to:{lat:42.8864,lng:-78.8784,label:"Buffalo"}}
   },
   { key:"internship", headline:"Internship • Boston, USA", copy:"Summer internship in Boston focusing on SEM‑based process analysis for meta‑optic devices.", tags:["Internship","Boston"],
     focus:{lat:42.3601,lng:-71.0589,dist:2.3,tilt:.2},
-    pins:[{lat:42.3601,lng:-71.0589,type:"work",label:"Boston"}],
+    pins:[{lat:42.3601,lng:-71.0589,type:"work",label:"Boston",
+      image:"https://picsum.photos/seed/boston/640/420", caption:"Boston internship"}],
     action:{type:"flight",from:{lat:42.8864,lng:-78.8784,label:"Buffalo"},to:{lat:42.3601,lng:-71.0589,label:"Boston"}}
   }
 ];
@@ -177,6 +227,11 @@ const copyEl=document.getElementById('copy');
 const tagsEl=document.getElementById('tags');
 const prevBtn=document.getElementById('prev');
 const nextBtn=document.getElementById('next');
+
+// Hover card refs
+const hoverCard = document.getElementById('hoverCard');
+const hoverImg  = document.getElementById('hoverImg');
+const hoverCap  = document.getElementById('hoverCap');
 
 // State
 let currentIndex = 0;
@@ -222,8 +277,7 @@ function clearPins(){ pinObjects.forEach(p=>earthGroup.remove(p)); pinObjects=[]
 function showPins(step){
   clearPins();
   (step.pins||[]).forEach(p=>{
-    const obj=placePin(p.lat,p.lng,p.type);
-    obj.userData={label:p.label};
+    const obj=placePin(p.lat,p.lng,p.type,{label:p.label,image:p.image,caption:p.caption});
     pinObjects.push(obj);
   });
 }
@@ -266,6 +320,42 @@ function runStep(i,first=false){
   if(step.action?.type==="flight") launchFlight(step.action.from,step.action.to);
   else clearFlight();
 }
+
+// Hover detection (raycasting) + card positioning
+const raycaster = new THREE.Raycaster();
+const mouse = new THREE.Vector2();
+function onMove(e){
+  const rect = renderer.domElement.getBoundingClientRect();
+  mouse.x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
+  mouse.y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
+
+  // Collect pick meshes
+  const targets = pinObjects.map(p => p.userData.pick);
+  raycaster.setFromCamera(mouse, camera);
+  const hit = raycaster.intersectObjects(targets, false)[0];
+
+  if(hit){
+    const pin = pinObjects.find(p => p.userData.pick === hit.object);
+    if(pin){
+      const meta = pin.userData.meta || {};
+      // Project 3D pos to 2D
+      const pos = pin.position.clone().project(camera);
+      const sx = (pos.x * 0.5 + 0.5) * window.innerWidth;
+      const sy = (-pos.y * 0.5 + 0.5) * window.innerHeight;
+
+      hoverImg.src = meta.image || 'https://picsum.photos/seed/default/640/420';
+      hoverCap.textContent = meta.caption || meta.label || '';
+      hoverCard.style.left = Math.min(sx + 16, window.innerWidth - 300) + 'px';
+      hoverCard.style.top  = Math.max(sy - 100, 16) + 'px';
+      hoverCard.style.display = 'block';
+      return;
+    }
+  }
+  hoverCard.style.display = 'none';
+}
+window.addEventListener('mousemove', onMove);
+
+// Buttons
 prevBtn.onclick=()=>{ if(currentIndex>0){ currentIndex--; runStep(currentIndex); } };
 nextBtn.onclick=()=>{ if(currentIndex<steps.length-1){ currentIndex++; runStep(currentIndex); } };
 
@@ -295,6 +385,16 @@ addEventListener('resize',()=>{
   camera.updateProjectionMatrix();
   renderer.setSize(innerWidth,innerHeight);
 });
+
+// Loading overlay control
+const loadingEl = document.getElementById('loading');
+let loaderTimer=null;
+function hideLoaderSoon(){
+  clearTimeout(loaderTimer);
+  loaderTimer = setTimeout(()=> loadingEl.style.display='none', 250); // tiny delay for a clean fade
+}
+// Safety timeout in case textures are slow or blocked
+setTimeout(hideLoaderSoon, 2000);
 
 // Boot
 currentIndex = getURLStepIndex();
