@@ -37,8 +37,8 @@
 </div>
 
 <script type="module">
-import * as THREE from 'https://unpkg.com/three@0.159.0/build/three.module.js';
-import { OrbitControls } from 'https://unpkg.com/three@0.159.0/examples/jsm/controls/OrbitControls.js';
+import * as THREE from 'https://unpkg.com/three@0.159.0/build/three.module.js?v=2';
+import { OrbitControls } from 'https://unpkg.com/three@0.159.0/examples/jsm/controls/OrbitControls.js?v=2';
 
 const R = 1;
 const scene = new THREE.Scene();
@@ -79,14 +79,11 @@ for (let i=0;i<starCount;i++){
 starsGeo.setAttribute('position', new THREE.BufferAttribute(positions,3));
 scene.add(new THREE.Points(starsGeo, new THREE.PointsMaterial({color:0x98a2b3,size:0.1,opacity:0.7,transparent:true})));
 
-// Earth
+// Earth (CORS-safe textures; falls back gracefully if blocked)
 const loader = new THREE.TextureLoader();
 loader.setCrossOrigin('anonymous');
-const earthMat = new THREE.MeshPhongMaterial({
-  color:0x1b3a6b, specular:new THREE.Color("#222"), shininess:12
-});
+const earthMat = new THREE.MeshPhongMaterial({ color:0x1b3a6b, specular:new THREE.Color("#222"), shininess:12 });
 
-// CORS-safe CDN textures (no local files needed)
 loader.load('https://planet-texture-maps.s3.us-east-2.amazonaws.com/earthmap4k.jpg',
   tex => { earthMat.map=tex; earthMat.needsUpdate=true; },
   undefined,
@@ -95,7 +92,7 @@ loader.load('https://planet-texture-maps.s3.us-east-2.amazonaws.com/earthmap4k.j
 loader.load('https://planet-texture-maps.s3.us-east-2.amazonaws.com/earthbump4k.jpg',
   tex => { earthMat.bumpMap=tex; earthMat.bumpScale=0.02; earthMat.needsUpdate=true; },
   undefined,
-  () => {} // ok if it fails
+  () => {}
 );
 
 const earthGroup = new THREE.Group();
@@ -110,7 +107,7 @@ const atmosphere = new THREE.Mesh(
 );
 earthGroup.add(atmosphere);
 
-// Helpers
+// Math helpers
 const deg2rad = d => d * Math.PI / 180;
 function latLngToVec3(lat, lng, radius=R){
   const phi=deg2rad(90-lat), theta=deg2rad(lng+180);
@@ -127,7 +124,7 @@ function makePin(color){
   cone.rotation.x=Math.PI; cone.position.y=0.04; g.add(orb,cone); return g;
 }
 function placePin(lat,lng,type="study"){
-  const colors={home:0x10b981,study:0x22d3ee,work:0xf472b6};
+  const colors={home:0x10b981,study:0x22d3ee,work:0xf472b6,personal:0x22d3ee};
   const p=makePin(colors[type]||0x22d3ee);
   const pos=latLngToVec3(lat,lng,R+0.02); p.position.copy(pos); p.lookAt(pos.clone().multiplyScalar(2));
   earthGroup.add(p); return p;
@@ -147,65 +144,32 @@ function makePlane(color=0xf59e0b){
   body.rotation.x=Math.PI/2; const wing=new THREE.Mesh(new THREE.BoxGeometry(0.04,0.003,0.01), new THREE.MeshStandardMaterial({color})); g.add(body,wing); return g;
 }
 
-// Steps
+// Steps (your journey)
 const steps = [
-  {
-    key: "birth",
-    headline: "Birth • Burdwan, India",
-    copy: "Born in Burdwan, West Bengal, India.",
-    tags: ["Personal", "Origin"],
-    focus: { lat: 23.2324, lng: 87.8615, dist: 2.3, tilt: 0.2 },
-    pins: [{ lat: 23.2324, lng: 87.8615, type: "personal", label: "Burdwan" }]
+  { key:"birth", headline:"Birth • Burdwan, India", copy:"Born in Burdwan, West Bengal, India.", tags:["Personal","Origin"],
+    focus:{lat:23.2324,lng:87.8615,dist:2.3,tilt:.2},
+    pins:[{lat:23.2324,lng:87.8615,type:"personal",label:"Burdwan"}]
   },
-  {
-    key: "school",
-    headline: "Schooling • Burdwan, India",
-    copy: "Completed primary and secondary schooling in Burdwan, excelling in science and mathematics.",
-    tags: ["School", "Education"],
-    focus: { lat: 23.2324, lng: 87.8615, dist: 2.3, tilt: 0.2 },
-    pins: [{ lat: 23.2324, lng: 87.8615, type: "study", label: "Burdwan" }]
+  { key:"school", headline:"Schooling • Burdwan, India", copy:"Completed primary and secondary schooling in Burdwan, excelling in science and mathematics.", tags:["School","Education"],
+    focus:{lat:23.2324,lng:87.8615,dist:2.3,tilt:.2},
+    pins:[{lat:23.2324,lng:87.8615,type:"study",label:"Burdwan"}]
   },
-  {
-    key: "undergrad",
-    headline: "Undergraduate Studies • NIT Durgapur",
-    copy: "Pursued Electronics and Communication Engineering at the National Institute of Technology, Durgapur.",
-    tags: ["NIT", "ECE", "Undergraduate"],
-    focus: { lat: 23.5505, lng: 87.2915, dist: 2.3, tilt: 0.2 },
-    pins: [{ lat: 23.5505, lng: 87.2915, type: "study", label: "NIT Durgapur" }],
-    action: {
-      type: "flight",
-      from: { lat: 23.2324, lng: 87.8615, label: "Burdwan" },
-      to: { lat: 23.5505, lng: 87.2915, label: "NIT Durgapur" }
-    }
+  { key:"undergrad", headline:"Undergraduate Studies • NIT Durgapur", copy:"Electronics and Communication Engineering at NIT Durgapur.", tags:["NIT","ECE","Undergraduate"],
+    focus:{lat:23.5505,lng:87.2915,dist:2.3,tilt:.2},
+    pins:[{lat:23.5505,lng:87.2915,type:"study",label:"NIT Durgapur"}],
+    action:{type:"flight",from:{lat:23.2324,lng:87.8615,label:"Burdwan"},to:{lat:23.5505,lng:87.2915,label:"NIT Durgapur"}}
   },
-  {
-    key: "grad",
-    headline: "Graduate Studies • University at Buffalo",
-    copy: "Masters and PhD in Electrical Engineering at the University at Buffalo, specializing in nanophotonics and biosensing.",
-    tags: ["UB", "Masters", "PhD", "USA"],
-    focus: { lat: 42.8864, lng: -78.8784, dist: 2.3, tilt: 0.2 },
-    pins: [{ lat: 42.8864, lng: -78.8784, type: "study", label: "Buffalo" }],
-    action: {
-      type: "flight",
-      from: { lat: 22.5726, lng: 88.3639, label: "Kolkata" },
-      to: { lat: 42.8864, lng: -78.8784, label: "Buffalo" }
-    }
+  { key:"grad", headline:"Graduate Studies • University at Buffalo", copy:"Masters and PhD in Electrical Engineering at UB, specializing in nanophotonics and biosensing.", tags:["UB","Masters","PhD","USA"],
+    focus:{lat:42.8864,lng:-78.8784,dist:2.3,tilt:.2},
+    pins:[{lat:42.8864,lng:-78.8784,type:"study",label:"Buffalo"}],
+    action:{type:"flight",from:{lat:22.5726,lng:88.3639,label:"Kolkata"},to:{lat:42.8864,lng:-78.8784,label:"Buffalo"}}
   },
-  {
-    key: "internship",
-    headline: "Internship • Boston, USA",
-    copy: "Summer internship at Metalenz, Boston, focusing on advanced SEM-based process analysis for meta-optic devices.",
-    tags: ["Internship", "Boston", "Metalenz"],
-    focus: { lat: 42.3601, lng: -71.0589, dist: 2.3, tilt: 0.2 },
-    pins: [{ lat: 42.3601, lng: -71.0589, type: "work", label: "Boston" }],
-    action: {
-      type: "flight",
-      from: { lat: 42.8864, lng: -78.8784, label: "Buffalo" },
-      to: { lat: 42.3601, lng: -71.0589, label: "Boston" }
-    }
+  { key:"internship", headline:"Internship • Boston, USA", copy:"Summer internship in Boston focusing on SEM‑based process analysis for meta‑optic devices.", tags:["Internship","Boston"],
+    focus:{lat:42.3601,lng:-71.0589,dist:2.3,tilt:.2},
+    pins:[{lat:42.3601,lng:-71.0589,type:"work",label:"Boston"}],
+    action:{type:"flight",from:{lat:42.8864,lng:-78.8784,label:"Buffalo"},to:{lat:42.3601,lng:-71.0589,label:"Boston"}}
   }
 ];
-
 
 // UI refs
 const headlineEl=document.getElementById('headline');
@@ -214,7 +178,7 @@ const tagsEl=document.getElementById('tags');
 const prevBtn=document.getElementById('prev');
 const nextBtn=document.getElementById('next');
 
-// Step state
+// State
 let currentIndex = 0;
 let pinObjects = [];
 let activeArc = null;
@@ -254,10 +218,7 @@ function easeCameraTo(lat,lng,dist=2.4,tilt=.2,ms=1200){
 }
 
 // Pins
-function clearPins(){
-  pinObjects.forEach(p=>earthGroup.remove(p));
-  pinObjects=[];
-}
+function clearPins(){ pinObjects.forEach(p=>earthGroup.remove(p)); pinObjects=[]; }
 function showPins(step){
   clearPins();
   (step.pins||[]).forEach(p=>{
