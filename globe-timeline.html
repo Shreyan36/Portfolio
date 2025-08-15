@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1"/>
 <title>Shreyan • Map Timeline</title>
 
+<!-- Leaflet -->
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
@@ -18,12 +19,14 @@
     font:14px/1.45 system-ui,-apple-system,Segoe UI,Roboto,Inter,Arial}
   #map{position:fixed; inset:0}
 
+  /* Legend */
   .legend{position:fixed; top:12px; right:12px; z-index:5000; display:flex; gap:12px;
     background:rgba(15,22,43,.65); border:1px solid rgba(255,255,255,.08);
     padding:8px 12px; border-radius:14px; backdrop-filter:blur(8px)}
   .lg{display:flex; align-items:center; gap:6px; color:var(--muted)}
   .dot{width:10px; height:10px; border-radius:50%}
 
+  /* Bottom card */
   .card{position:fixed;left:16px;bottom:16px;z-index:5000;width:min(560px,calc(100% - 32px));
         background:rgba(15,22,43,.85);border:1px solid rgba(255,255,255,.06);border-radius:16px;
         padding:16px;backdrop-filter:blur(8px)}
@@ -37,6 +40,7 @@
   .btn.primary{background:linear-gradient(135deg,#6d28d9,#8b5cf6);border:0}
   .btn:disabled{opacity:.5;cursor:not-allowed}
 
+  /* Gallery popup (large) */
   .gallery{position:fixed;z-index:6000;display:none;width:min(960px,96vw);
            background:rgba(15,22,43,.98);border:1px solid rgba(255,255,255,.1);
            border-radius:16px;overflow:hidden;box-shadow:0 18px 60px rgba(0,0,0,.55)}
@@ -52,6 +56,7 @@
   .navPrev{left:10px} .navNext{right:10px}
   .galleryCaption{padding:10px 14px;color:#dbe7ff;border-top:1px solid rgba(255,255,255,.08)}
 
+  /* Pin hover hint */
   .leaflet-marker-icon.pin:hover{filter: drop-shadow(0 0 8px rgba(255,255,255,.5))}
 </style>
 </head>
@@ -59,12 +64,14 @@
 
 <div id="map" aria-label="Satellite map timeline"></div>
 
+<!-- legend -->
 <div class="legend">
   <div class="lg"><span class="dot" style="background:var(--origin)"></span>Origin</div>
   <div class="lg"><span class="dot" style="background:var(--study)"></span>Study</div>
   <div class="lg"><span class="dot" style="background:var(--work)"></span>Work</div>
 </div>
 
+<!-- bottom info card -->
 <div class="card">
   <div class="row">
     <div id="typeDot" class="dot" style="background:var(--origin)"></div>
@@ -78,6 +85,7 @@
   </div>
 </div>
 
+<!-- big gallery popup -->
 <div id="gallery" class="gallery" role="dialog" aria-modal="true">
   <div class="galleryHeader">
     <div class="galleryTitle" id="gTitle">Location</div>
@@ -91,52 +99,52 @@
 </div>
 
 <script>
-/* --------------------- Data --------------------- */
+/* ---------- Data (edit gallery paths later) ---------- */
 const steps = [
   {
     id:'birth', type:'origin', title:'Birth • Burdwan, India',
     subtitle:'Starting point of the journey.',
     desc:'Burdwan (Bardhaman), West Bengal.',
     lat:23.2324, lon:87.8615, radiusKm:10,
-    gallery:[ sampleImage('Burdwan • early roots', '#0ea5e9','#1e3a8a'),
-              sampleImage('Hometown memories', '#38bdf8','#0e7490') ]
+    gallery:[ imgPlaceholder('Burdwan • early roots', '#0ea5e9','#1e3a8a'),
+              imgPlaceholder('Hometown memories', '#38bdf8','#0e7490') ]
   },
   {
     id:'school', type:'origin', title:'School • Burdwan, India',
     subtitle:'Early education.',
     desc:'Formative years and first sparks of science.',
     lat:23.2324, lon:87.8615, radiusKm:10,
-    gallery:[ sampleImage('School years • curiosity', '#22c55e','#0f766e'),
-              sampleImage('First circuits & demos', '#34d399','#065f46') ]
+    gallery:[ imgPlaceholder('School years • curiosity', '#22c55e','#0f766e'),
+              imgPlaceholder('First circuits & demos', '#34d399','#065f46') ]
   },
   {
     id:'nit', type:'study', title:'Undergrad • NIT Durgapur',
     subtitle:'Electronics & Communication Engineering',
     desc:'NIT Durgapur, West Bengal, India.',
     lat:23.5505, lon:87.2910, radiusKm:12,
-    gallery:[ sampleImage('NIT Durgapur campus', '#f59e0b','#b45309'),
-              sampleImage('ECE • projects', '#fbbf24','#92400e') ]
+    gallery:[ imgPlaceholder('NIT Durgapur campus', '#f59e0b','#b45309'),
+              imgPlaceholder('ECE • projects', '#fbbf24','#92400e') ]
   },
   {
     id:'ub', type:'study', title:'MS & PhD • University at Buffalo',
     subtitle:'Nanophotonics & Biosensing',
     desc:'SUNY Buffalo, New York, USA.',
     lat:42.9990, lon:-78.7800, radiusKm:20,
-    gallery:[ sampleImage('Buffalo • research', '#8b5cf6','#4c1d95'),
-              sampleImage('Cleanroom & optics', '#a78bfa','#4338ca') ]
+    gallery:[ imgPlaceholder('Buffalo • research', '#8b5cf6','#4c1d95'),
+              imgPlaceholder('Cleanroom & optics', '#a78bfa','#4338ca') ]
   },
   {
     id:'boston', type:'work', title:'Internship • Boston, USA',
     subtitle:'Summer at a meta‑optics company',
     desc:'Hands‑on SEM & process analysis.',
     lat:42.3601, lon:-71.0589, radiusKm:18,
-    gallery:[ sampleImage('Boston • summer stint', '#ef4444','#7f1d1d'),
-              sampleImage('Labs & city', '#fb7185','#7f1d1d') ]
+    gallery:[ imgPlaceholder('Boston • summer stint', '#ef4444','#7f1d1d'),
+              imgPlaceholder('Labs & city', '#fb7185','#7f1d1d') ]
   }
 ];
 const typeColor = t => t==='origin' ? '#14b8a6' : t==='study' ? '#60a5fa' : '#f59e0b';
 
-/* --------------------- Map --------------------- */
+/* ---------- Map (satellite, no labels) ---------- */
 const map = L.map('map', {
   worldCopyJump:true, zoomControl:false, minZoom:2, maxZoom:18,
   center:[20,78], zoom:4, preferCanvas:true, zoomAnimation:true, inertia:true
@@ -147,7 +155,7 @@ L.tileLayer(
   { attribution:'Tiles © Esri — Source: Esri, Maxar, Earthstar Geographics', crossOrigin:true }
 ).addTo(map);
 
-/* --------------------- Pins + gallery trigger --------------------- */
+/* ---------- Pins + hover gallery ---------- */
 const pinLayer = L.layerGroup().addTo(map);
 steps.forEach(s=>{
   const icon = L.divIcon({
@@ -161,93 +169,88 @@ steps.forEach(s=>{
   let hoverTimer=null;
   m.on('mouseover', (e)=>{ hoverTimer=setTimeout(()=>openGallery(s,e.latlng), 120); });
   m.on('mouseout', ()=>{ if(hoverTimer){clearTimeout(hoverTimer); hoverTimer=null;} });
-  m.on('click', ()=> focusCity(s));
+  m.on('click', ()=> focusCity(s)); // click = zoom to city
 });
 
-/* --------------------- DOM refs --------------------- */
-const typeDotEl = document.getElementById('typeDot');
-const titleEl   = document.getElementById('title');
-const subEl     = document.getElementById('subtitle');
-const descEl    = document.getElementById('desc');
+/* ---------- DOM refs ---------- */
+const elTypeDot = document.getElementById('typeDot');
+const elTitle   = document.getElementById('title');
+const elSub     = document.getElementById('subtitle');
+const elDesc    = document.getElementById('desc');
 const btnPrev   = document.getElementById('prev');
 const btnNext   = document.getElementById('next');
 
-/* --------------------- Helpers (robust awaits) --------------------- */
-function awaitOnce(target, evt, ms=1800){
+/* ---------- Robust animation helpers ---------- */
+function waitMoveOrTimeout(ms=2200){
   return new Promise(resolve=>{
     let done=false;
-    const h=()=>{ if(!done){done=true; target.off(evt,h); resolve(); } };
-    target.on(evt, h);
-    setTimeout(()=>{ if(!done){ target.off(evt,h); resolve(); } }, ms);
-  });
-}
-function awaitMove(ms=2000){
-  // resolve when either moveend or zoomend fires, or after timeout
-  return new Promise(resolve=>{
-    let t = setTimeout(()=>cleanup(resolve), ms);
-    function cleanup(cb){
-      map.off('moveend', onEnd); map.off('zoomend', onEnd); clearTimeout(t); cb();
-    }
-    function onEnd(){ cleanup(resolve); }
-    map.once('moveend', onEnd);
-    map.once('zoomend', onEnd);
+    const finish=()=>{ if(!done){ done=true; map.off('moveend',finish); map.off('zoomend',finish); resolve(); } };
+    map.once('moveend', finish);
+    map.once('zoomend', finish);
+    setTimeout(finish, ms);
   });
 }
 
-/* --------------------- Fly sequence --------------------- */
-const OUT_ZOOM = 3.5, OUT_DUR = 0.9, IN_DUR = 1.4;
+/* ---------- Fly/zoom logic ---------- */
+const OUT_ZOOM = 3.5;   // zoom-out level between jumps
+const ZPAD = [60,60];   // padding when fitting a city circle
 let animBusy=false;
 
 async function focusCity(step){
   if (animBusy) return;
   animBusy = true;
 
-  // Update HUD
-  typeDotEl.style.background = typeColor(step.type);
-  titleEl.textContent = step.title;
-  subEl.textContent   = step.subtitle;
-  descEl.textContent  = step.desc;
+  // Update card text
+  elTypeDot.style.background = typeColor(step.type);
+  elTitle.textContent = step.title;
+  elSub.textContent   = step.subtitle;
+  elDesc.textContent  = step.desc;
 
-  const currentZoom = map.getZoom();
-  if (currentZoom > OUT_ZOOM + 0.1){
-    map.flyTo(map.getCenter(), OUT_ZOOM, {duration:OUT_DUR, animate:true});
-    await awaitMove();
+  const center = [step.lat, step.lon];
+
+  // 1) Zoom out (only if currently closer than OUT_ZOOM)
+  if (map.getZoom() > OUT_ZOOM + 0.05){
+    map.flyTo(map.getCenter(), OUT_ZOOM, {animate:true, duration:0.9});
+    await waitMoveOrTimeout();
   }
 
-  map.flyTo([step.lat, step.lon], OUT_ZOOM, {duration:OUT_DUR, animate:true});
-  await awaitMove();
+  // 2) Pan (fly) to new city at OUT_ZOOM
+  map.flyTo(center, OUT_ZOOM, {animate:true, duration:1.0});
+  await waitMoveOrTimeout();
 
-  // Compute desired city zoom from a radius circle, clamp to 12..15
-  const circle  = L.circle([step.lat, step.lon], { radius:(step.radiusKm||12)*1000 });
-  const bounds  = circle.getBounds();
-  let desired   = map.getBoundsZoom(bounds, true, [60,60]);
-  desired = Math.max(12, Math.min(15, desired));
+  // 3) Compute desired zoom to show the whole city radius
+  const circle = L.circle(center, { radius:(step.radiusKm||12)*1000 });
+  const bounds = circle.getBounds();
+  let targetZ = map.getBoundsZoom(bounds, true, ZPAD);
+  targetZ = Math.max(12, Math.min(15, targetZ)); // clamp
 
-  map.flyTo([step.lat, step.lon], desired, {duration:IN_DUR, animate:true});
-  await awaitMove();
+  // 4) Zoom in to city
+  map.flyTo(center, targetZ, {animate:true, duration:1.2});
+  await waitMoveOrTimeout();
 
   animBusy=false;
 }
 
-/* --------------------- Sequencing controls --------------------- */
+/* ---------- Sequencing controls ---------- */
 let idx = 0;
 function setStep(i, opts={}){
   idx = Math.max(0, Math.min(steps.length-1, i));
   const s = steps[idx];
 
-  typeDotEl.style.background = typeColor(s.type);
-  titleEl.textContent = s.title;
-  subEl.textContent   = s.subtitle;
-  descEl.textContent  = s.desc;
+  // Update text instantly
+  elTypeDot.style.background = typeColor(s.type);
+  elTitle.textContent = s.title;
+  elSub.textContent   = s.subtitle;
+  elDesc.textContent  = s.desc;
 
   btnPrev.disabled = idx===0;
   btnNext.disabled = idx===steps.length-1;
 
   if (opts.instant){
-    // first load: go straight to city view without the pre-out zoom
-    const circle  = L.circle([s.lat, s.lon], { radius:(s.radiusKm||12)*1000 });
-    const bounds  = circle.getBounds();
-    const z       = Math.max(12, Math.min(15, map.getBoundsZoom(bounds, true, [60,60])));
+    // First load: go directly to city view without pre-zoom-out
+    const circle = L.circle([s.lat, s.lon], { radius:(s.radiusKm||12)*1000 });
+    const bounds = circle.getBounds();
+    const z = Math.max(12, Math.min(15, map.getBoundsZoom(bounds, true, ZPAD)));
     map.setView([s.lat, s.lon], z, {animate:false});
   } else {
     focusCity(s);
@@ -257,10 +260,10 @@ function setStep(i, opts={}){
 btnPrev.onclick = ()=> setStep(idx-1);
 btnNext.onclick = ()=> setStep(idx+1);
 
-// initial
+// Initial view
 setStep(0, {instant:true});
 
-/* --------------------- Gallery logic --------------------- */
+/* ---------- Large gallery ---------- */
 const gallery = document.getElementById('gallery');
 const gTitle  = document.getElementById('gTitle');
 const gCaption= document.getElementById('gCaption');
@@ -283,11 +286,12 @@ function openGallery(step, latlng){
   gImgs = step.gallery.slice();
   gIndex = 0;
 
+  // rebuild slides
   gViewport.querySelectorAll('img.galleryImg').forEach(n=>n.remove());
   gImgs.forEach((src, i)=>{
     const im = document.createElement('img');
     im.className = 'galleryImg' + (i===0 ? ' active':'');
-    im.src = src;
+    im.src = src;                         // replace later with real files
     im.alt = step.title + ' • ' + (i+1);
     gViewport.appendChild(im);
   });
@@ -303,8 +307,8 @@ gPrev.onclick = ()=>{ if (!gImgs.length) return; gIndex=(gIndex-1+gImgs.length)%
 gNext.onclick = ()=>{ if (!gImgs.length) return; gIndex=(gIndex+1)%gImgs.length; updateCaption(steps[idx]); };
 gClose.onclick= ()=>{ gallery.style.display='none'; };
 
-/* --------------------- Placeholder images --------------------- */
-function sampleImage(label, a,b){
+/* ---------- Placeholder images (swap later) ---------- */
+function imgPlaceholder(label, a,b){
   const svg = encodeURIComponent(
 `<svg xmlns='http://www.w3.org/2000/svg' width='1600' height='900'>
   <defs><linearGradient id='g' x1='0' y1='0' x2='1' y2='1'>
